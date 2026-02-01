@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sørhaug Consulting – Tilstandsrapporter og vedlikeholdsplanlegging for kirker</title>
+
+  <meta name="description" content="Sørhaug Consulting leverer profesjonelle tilstandsrapporter og vedlikeholdsplaner for kirker og bevaringsverdige bygg i Norge – fra befaring til beslutningsgrunnlag." />
+  <meta name="theme-color" content="#0B4F6C" />
+
+  <link rel="preconnect" href="https://source.unsplash.com" crossorigin>
+
+  <style>
+    /* Sørhaug Consulting – lys (hvit) variant */
+    :root{
+      --bg:#ffffff;
+      --surface:#ffffff;
+      --surface2:#F6F9FC;
+      --text:#0B1220;
+      --muted:#4B5563;
+      --line:rgba(15,23,42,.12);
+
+      --accent:#B45309;     /* varm rav */
+      --accent2:#2563EB;    /* klar blå */
+      --accent3:#0F766E;    /* rolig grønn */
+
+      --shadow: 0 18px 45px rgba(2, 6, 23, .10);
+      --radius: 18px;
+      --max: 1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 650px at 10% -10%, rgba(37, 99, 235, .10), transparent 60%),
+        radial-gradient(900px 600px at 100% 0%, rgba(180, 83, 9, .08), transparent 55%),
+        radial-gradient(900px 650px at 30% 110%, rgba(15, 118, 110, .07), transparent 55%),
+        var(--bg);
+      line-height:1.6;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .container{ width:min(var(--max), calc(100% - 40px)); margin:0 auto; }
+
+    .section{ padding: 84px 0; }
+    .section-alt{
+      background: linear-gradient(180deg, rgba(2,6,23,.03), rgba(2,6,23,.00));
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .skip{
+      position:absolute;
+      left:-999px; top:auto;
+      width:1px; height:1px;
+      overflow:hidden;
+    }
+    .skip:focus{
+      left: 16px; top: 16px;
+      width:auto; height:auto;
+      padding:10px 12px;
+      background: var(--surface);
+      border:1px solid var(--line);
+      border-radius: 10px;
+      z-index: 9999;
+      box-shadow: var(--shadow);
+    }
+
+    /* Header */
+    .site-header{
+      position:sticky; top:0; z-index:1000;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.75);
+      border-bottom: 1px solid var(--line);
+    }
+    .header-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 0;
+      gap: 18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap: 12px;
+    }
+    .brand-mark{
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, rgba(180,83,9,.18), rgba(37,99,235,.14));
+      border:1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(2,6,23,.10);
+      font-weight: 900;
+      letter-spacing: .5px;
+      color: #0B1220;
+    }
+    .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+    .brand-text span{ color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+
+    .nav{ display:flex; align-items:center; gap: 18px; }
+    .nav a{
+      color: var(--muted);
+      font-weight: 650;
+      padding: 10px 10px;
+      border-radius: 10px;
+    }
+    .nav a:hover{
+      background: rgba(37,99,235,.08);
+      text-decoration:none;
+      color: var(--text);
+    }
+
+    .nav-toggle{
+      display:none;
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.70);
+      cursor:pointer;
+      box-shadow: 0 10px 24px rgba(2,6,23,.08);
+    }
+    .nav-toggle span{
+      display:block;
+      width: 20px; height: 2px;
+      background: var(--text);
+      margin: 5px auto;
+      border-radius: 2px;
+      opacity:.9;
+    }
+
+    /* Hero image under nav (30% høyde) */
+    .hero-image{
+      height: 30vh;
+      min-height: 240px;
+      max-height: 420px;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.78)),
+        radial-gradient(900px 520px at 30% 15%, rgba(37,99,235,.20), transparent 55%),
+        radial-gradient(900px 520px at 80% 30%, rgba(180,83,9,.14), transparent 55%),
+        url("images/hero.svg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .hero-image::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height: 90px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(180,83,9,.35);
+      background: linear-gradient(135deg, rgba(180,83,9,.12), rgba(37,99,235,.08));
+      color: var(--text);
+      font-weight: 800;
+      box-shadow: 0 14px 35px rgba(2,6,23,.10);
+      text-decoration:none !important;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 45px rgba(2,6,23,.14);
+    }
+    .btn:active{ transform: translateY(0); }
+
+    .btn-ghost{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.70);
+    }
+    .btn-small{ padding: 10px 12px; border-radius: 11px; font-size: 14px; }
+
+    /* Intro */
+    .intro{ padding-top: 72px; }
+    .intro-inner{
+      display:grid;
+      grid-template-columns: 1.35fr .85fr;
+      gap: 24px;
+      align-items:start;
+    }
+    .eyebrow{
+      display:inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.28);
+      background: rgba(37,99,235,.08);
+      color: #0B1220;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    h1{
+      margin: 14px 0 10px;
+      font-size: clamp(30px, 3.6vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -0.2px;
+    }
+    .lead{
+      margin: 0 0 18px;
+      color: rgba(11,18,32,.86);
+      font-size: 18px;
+      max-width: 62ch;
+    }
+    .hero-cta{ display:flex; gap:12px; flex-wrap:wrap; margin: 18px 0 18px; }
+
+    .trust{
+      display:flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .trust-item{
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      border-radius: 14px;
+      min-width: 160px;
+      box-shadow: 0 10px 22px rgba(2,6,23,.06);
+    }
+    .trust-kpi{ font-weight: 950; color: var(--accent); font-size: 18px; display:block; }
+    .trust-label{ color: var(--muted); font-size: 13px; }
+
+    .hero-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(246,249,252,.88));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+    }
+    .hero-card h2{ margin: 4px 0 10px; font-size: 18px; }
+
+    /* Lists */
+    .checklist{ list-style:none; padding:0; margin:0; }
+    .checklist li{
+      padding-left: 26px;
+      position:relative;
+      margin: 10px 0;
+      color: rgba(11,18,32,.90);
+    }
+    .checklist li:before{
+      content:"✓";
+      position:absolute; left:0; top:0;
+      color: var(--accent3);
+      font-weight: 950;
+    }
+    .card-actions{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top: 12px; }
+    .link{ color: var(--accent2); font-weight: 800; }
+    .link:hover{ text-decoration:underline; }
+
+    /* Sections */
+    .section-head{ max-width: 72ch; margin-bottom: 24px; }
+    .section-head h2{ margin:0 0 10px; font-size: 30px; letter-spacing:-.2px; }
+    .section-head p{ margin:0; color: var(--muted); }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,249,252,.90));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 16px 42px rgba(2,6,23,.10);
+    }
+    .card h3{ margin:0 0 8px; }
+    .card p{ margin:0 0 10px; color: rgba(11,18,32,.86); }
+    .bullets{ margin: 0; padding-left: 18px; color: var(--muted); }
+    .bullets li{ margin: 6px 0; }
+
+    /* Steps */
+    .steps{
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display:grid;
+      gap: 12px;
+    }
+    .steps li{
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 16px 14px;
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 12px 28px rgba(2,6,23,.06);
+      position:relative;
+    }
+    .steps li h3{ margin:0 0 6px; }
+    .steps li p{ margin:0; color: var(--muted); }
+
+    /* Split */
+    .split{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 22px;
+      align-items:start;
+    }
+    .lead-sm{ color: rgba(11,18,32,.86); font-size: 17px; margin-top: 6px; }
+    .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin: 14px 0 16px; }
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(37,99,235,.18);
+      background: rgba(37,99,235,.06);
+      color: rgba(11,18,32,.86);
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .mini-grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .mini{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 22px rgba(2,6,23,.06);
+    }
+    .mini h3{ margin:0 0 6px; font-size: 16px; }
+    .mini p{ margin:0; color: var(--muted); font-size: 14px; }
+
+    .image-card{
+      margin:0;
+      border-radius: var(--radius);
+      overflow:hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      background: rgba(255,255,255,.85);
+    }
+    .image-card img{ width:100%; height: 360px; object-fit: cover; }
+    .image-card figcaption{
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 12.5px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.80);
+    }
+
+    /* CTA bar */
+    .cta-bar{
+      margin-top: 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 18px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(180,83,9,.22);
+      background: linear-gradient(135deg, rgba(180,83,9,.10), rgba(37,99,235,.06));
+      box-shadow: 0 16px 38px rgba(2,6,23,.08);
+    }
+    .cta-bar h3{ margin:0 0 6px; }
+    .cta-bar p{ margin:0; color: var(--muted); max-width: 70ch; }
+
+    /* Contact */
+    .contact-cards{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .contact-card{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.78);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 12px 28px rgba(2,6,23,.06);
+    }
+    .contact-card h3{ margin:0 0 6px; font-size: 15px; }
+    .contact-card p{ margin:0 0 6px; }
+    .contact-card small{ color: var(--muted); }
+
+    .form h3{ margin:0 0 12px; }
+    label{ display:block; font-weight: 800; margin: 10px 0 6px; color: rgba(11,18,32,.90); }
+    input, textarea{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(15,23,42,.18);
+      background: rgba(255,255,255,.92);
+      color: var(--text);
+      outline:none;
+      box-shadow: 0 10px 22px rgba(2,6,23,.05);
+    }
+    input:focus, textarea:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.14), 0 10px 22px rgba(2,6,23,.06);
+    }
+    .form-note{ color: var(--muted); font-size: 12.5px; margin: 10px 0 0; }
+
+    /* Footer */
+    .footer{
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+    }
+    .footer-inner{
+      display:flex;
+      gap: 18px;
+      justify-content:space-between;
+      align-items:flex-start;
+      padding-bottom: 18px;
+    }
+    .brand-foot{ display:flex; gap: 12px; align-items:center; margin-bottom: 10px; }
+    .footer-cols{ display:flex; gap: 28px; }
+    .footer h4{ margin: 0 0 10px; font-size: 14px; color: rgba(11,18,32,.92); }
+    .footer a{ display:block; color: var(--muted); padding: 4px 0; }
+    .footer a[aria-disabled="true"]{ opacity:.6; pointer-events:none; }
+    .footer-bottom{
+      border-top: 1px solid var(--line);
+      padding: 12px 0;
+      background: rgba(2,6,23,.02);
+    }
+    .muted{ color: var(--muted); }
+    .small{ font-size: 12.5px; }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .intro-inner{ grid-template-columns: 1fr; }
+      .split{ grid-template-columns: 1fr; }
+      .grid-3{ grid-template-columns: 1fr; }
+      .mini-grid{ grid-template-columns: 1fr; }
+      .contact-cards{ grid-template-columns: 1fr; }
+      .footer-inner{ flex-direction:column; }
+      .cta-bar{ flex-direction:column; align-items:flex-start; }
+    }
+    @media (max-width: 760px){
+      .nav-toggle{ display:block; }
+      .nav{
+        position:absolute;
+        right: 20px;
+        top: 66px;
+        flex-direction:column;
+        align-items:stretch;
+        gap: 6px;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.92);
+        box-shadow: var(--shadow);
+        display:none;
+        min-width: 220px;
+      }
+      .nav.open{ display:flex; }
+      .nav a{ padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Hopp til innhold</a>
+
+  <!-- HEADER / NAV -->
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Sørhaug Consulting – hjem">
+        <span class="brand-mark" aria-hidden="true">SC</span>
+        <span class="brand-text">
+          <strong>Sørhaug Consulting</strong>
+          <span>Tilstandsrapporter • Vedlikeholdsplanlegging • Kirker</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" aria-label="Åpne meny" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="nav" aria-label="Hovedmeny">
+        <a href="#tjenester">Tjenester</a>
+        <a href="#prosess">Prosess</a>
+        <a href="#kompetanse">Kompetanse</a>
+        <a href="#leveranser">Leveranser</a>
+        <a href="#kontakt" class="btn btn-small">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- STORT BILDE UNDER NAV (ca 30% høyde) -->
+  <section class="hero-image" aria-label="Kirke i Norge"></section>
+
+  <main id="main">
+
+    <!-- INTRO / PITCH -->
+    <section class="section intro">
+      <div class="container intro-inner">
+        <div>
+          <p class="eyebrow">Forvaltning av kulturarv – med teknisk presisjon</p>
+          <h1>Tilstandsrapporter og vedlikeholdsplaner for kirker og bevaringsverdige bygg i Norge.</h1>
+          <p class="lead">
+            Vi leverer et komplett beslutningsgrunnlag – fra befaring og dokumentasjon til prioriterte tiltak,
+            kostnadsanslag og 10-årig vedlikeholdsplan. Profesjonelt. Systematisk. Etterprøvbart.
+          </p>
+
+          <div class="hero-cta">
+            <a class="btn" href="#kontakt">Be om tilbud</a>
+            <a class="btn btn-ghost" href="#leveranser">Se leveranser</a>
+          </div>
+
+          <div class="trust">
+            <div class="trust-item">
+              <span class="trust-kpi">TG 0–3</span>
+              <span class="trust-label">Tydelig tilstandsgrad</span>
+            </div>
+            <div class="trust-item">
+              <span class="trust-kpi">10 år</span>
+              <span class="trust-label">Vedlikeholdsplan</span>
+            </div>
+            <div class="trust-item">
+              <span class="trust-kpi">Én partner</span>
+              <span class="trust-label">Fra start til slutt</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="hero-card" aria-label="Hurtiginfo">
+          <h2>Hva du får</h2>
+          <ul class="checklist">
+            <li>Systematisk vurdering av bygningsdeler og tekniske anlegg</li>
+            <li>Avvik, årsak, konsekvens og anbefalt tiltak</li>
+            <li>Prioritering (H/M/L) og kostnadsrammer</li>
+            <li>Vern/antikvariske hensyn tydeliggjort</li>
+            <li>Rapport i Word/PDF + Excel-grunnlag</li>
+          </ul>
+          <div class="card-actions">
+            <a class="btn btn-small" href="#kontakt">Kontakt oss</a>
+            <a class="link" href="#prosess">Slik jobber vi →</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TJENESTER -->
+    <section class="section" id="tjenester">
+      <div class="container">
+        <div class="section-head">
+          <h2>Tjenester</h2>
+          <p>Rettet mot kirker, fredete og bevaringsverdige bygg – med fokus på driftssikkerhet, kulturminne og økonomisk planlegging.</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <h3>Tilstandsrapport</h3>
+            <p>Strukturert gjennomgang av bygningsdeler og tekniske anlegg med TG 0–3, avvik, konsekvens og tiltak.</p>
+            <ul class="bullets">
+              <li>Befaring + dokumentgjennomgang</li>
+              <li>Fotodokumentasjon og merknader</li>
+              <li>Risiko-/konsekvensvurdering</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Vedlikeholdsplan (10 år)</h3>
+            <p>Prioriterte tiltak med kostnadsanslag og tidslinje – laget for budsjett, styresaker og saksbehandling.</p>
+            <ul class="bullets">
+              <li>År 1 / 2–5 / 6–10</li>
+              <li>H/M/L-prioritet</li>
+              <li>Kostnadsrammer og tiltaksstrategi</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Antikvarisk rådgivning</h3>
+            <p>Vurderinger med hensyn til verneverdier, materialbruk og utførelse – og hvordan tiltak kan gjennomføres skånsomt.</p>
+            <ul class="bullets">
+              <li>Vernestatus og kravbildet</li>
+              <li>Material- og detaljforståelse</li>
+              <li>Bevaringsstrategi</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROSESS -->
+    <section class="section section-alt" id="prosess">
+      <div class="container">
+        <div class="section-head">
+          <h2>Prosess</h2>
+          <p>Forutsigbar leveranse – dokumentert og etterprøvbar. Tilpasset offentlige anskaffelser.</p>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <h3>1. Oppstart & avklaringer</h3>
+            <p>Omfang, bygningstype, vernestatus, tilgjengelig dokumentasjon og ønsket detaljeringsnivå.</p>
+          </li>
+          <li>
+            <h3>2. Befaring & dokumentasjon</h3>
+            <p>Visuell kontroll, målinger ved behov, fotodokumentasjon og registrering av avvik.</p>
+          </li>
+          <li>
+            <h3>3. Tilstandsvurdering</h3>
+            <p>Tilstandsgrad (TG 0–3) per bygningsdel/anlegg, med årsak, konsekvens og anbefalt tiltak.</p>
+          </li>
+          <li>
+            <h3>4. Tiltaksplan & kostnadsrammer</h3>
+            <p>Prioritet (H/M/L), tidsplassering (År 1 / 2–5 / 6–10) og kostnadsanslag per tiltak.</p>
+          </li>
+          <li>
+            <h3>5. Leveranse & gjennomgang</h3>
+            <p>Rapport i Word/PDF + Excel-grunnlag. Vi gjennomgår funn og anbefalinger med oppdragsgiver.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- KOMPETANSE -->
+    <section class="section" id="kompetanse">
+      <div class="container split">
+        <div>
+          <h2>Kompetanse og kvalitet</h2>
+          <p class="lead-sm">
+            Vi kombinerer praktisk bygningsteknisk erfaring med strukturert rapportering – slik at resultatet kan brukes i
+            forvaltning, budsjett og offentlige beslutningsprosesser.
+          </p>
+
+          <div class="pill-row">
+            <span class="pill">Kulturminnehensyn</span>
+            <span class="pill">TG 0–3</span>
+            <span class="pill">Prioritering</span>
+            <span class="pill">Kostnadsrammer</span>
+            <span class="pill">Dokumentasjon</span>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini">
+              <h3>Etterprøvbarhet</h3>
+              <p>Vi dokumenterer avvik med beskrivelse, foto og begrunnede anbefalinger.</p>
+            </div>
+            <div class="mini">
+              <h3>Planlegging</h3>
+              <p>Vedlikeholdsplan som kan oppdateres og brukes som styringsverktøy over tid.</p>
+            </div>
+            <div class="mini">
+              <h3>Profesjonell leveranse</h3>
+              <p>Klart språk, ryddig struktur og rapport som fungerer i sak/arkiv.</p>
+            </div>
+          </div>
+        </div>
+
+        <figure class="image-card">
+          <img
+            src="https://source.unsplash.com/ZSMlc6BWz3o/1200x900"
+            alt="Historisk stavkirke i Norge"
+            loading="lazy"
+          />
+          <figcaption>
+            Foto: Lokalt SVG-bilde (images/hero.svg). Bytt filen i <code>images/hero.svg</code> for å endre hero-bildet.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- LEVERANSER -->
+    <section class="section section-alt" id="leveranser">
+      <div class="container">
+        <div class="section-head">
+          <h2>Leveranser</h2>
+          <p>Alt du trenger for å prioritere, bestille og planlegge tiltak – i formater som passer drift og saksbehandling.</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <h3>Word/PDF-rapport</h3>
+            <p>Beslutningsgrunnlag med sammendrag, funn per bygningsdel, tiltak og anbefalinger.</p>
+            <ul class="bullets">
+              <li>Klart, offentlig språk</li>
+              <li>Vedlegg/foto ved behov</li>
+              <li>Tilpasset arkiv/saksbehandling</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Excel-grunnlag</h3>
+            <p>Planleggingsverktøy for videre oppfølging – filtrering, prioritering og oppdatering over tid.</p>
+            <ul class="bullets">
+              <li>Automatisk fargekoding av TG</li>
+              <li>Rullegardinvalg for TG og prioritet</li>
+              <li>10-årig planstruktur</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Tiltaksoversikt</h3>
+            <p>En ryddig oversikt over tiltak – hva, hvorfor, når og til hvilken ramme.</p>
+            <ul class="bullets">
+              <li>År 1 / 2–5 / 6–10</li>
+              <li>H/M/L-prioritet</li>
+              <li>Kostnadsrammer</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="cta-bar">
+          <div>
+            <h3>Klar for en strukturert tilstandsrapport?</h3>
+            <p>Send oss kort info om bygg, lokasjon og ønsket omfang – så svarer vi med forslag til leveranse og prisramme.</p>
+          </div>
+          <a class="btn" href="#kontakt">Be om tilbud</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- KONTAKT -->
+    <section class="section" id="kontakt">
+      <div class="container split">
+        <div>
+          <h2>Kontakt</h2>
+          <p class="lead-sm">Fortell oss om bygget og behovet. Vi svarer raskt med anbefalt omfang og neste steg.</p>
+
+          <div class="contact-cards">
+            <div class="contact-card">
+              <h3>E-post</h3>
+              <p><a href="mailto:post@sorhaugconsulting.no">post@sorhaugconsulting.no</a></p>
+              <small>Bytt til din faktiske e-post.</small>
+            </div>
+            <div class="contact-card">
+              <h3>Telefon</h3>
+              <p><a href="tel:+4700000000">+47 00 00 00 00</a></p>
+              <small>Bytt til ditt faktiske nummer.</small>
+            </div>
+            <div class="contact-card">
+              <h3>Lokasjon</h3>
+              <p>Norge (landsdekkende)</p>
+              <small>Befaring etter avtale.</small>
+            </div>
+          </div>
+        </div>
+
+        <form class="form card" id="contactForm">
+          <h3>Be om tilbud</h3>
+          <label>
+            Navn
+            <input name="name" autocomplete="name" required />
+          </label>
+          <label>
+            E-post
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Kommune / sted
+            <input name="location" autocomplete="address-level2" />
+          </label>
+          <label>
+            Beskrivelse (bygg, omfang, tidsønske)
+            <textarea name="message" rows="5" required></textarea>
+          </label>
+          <button class="btn" type="submit">Send forespørsel</button>
+          <p class="form-note">
+            Skjemaet åpner e-postklient (mailto) – ingen data lagres på nettsiden.
+          </p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="brand-foot">
+          <span class="brand-mark" aria-hidden="true">SC</span>
+          <div>
+            <strong>Sørhaug Consulting</strong>
+            <div class="muted">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div>
+          </div>
+        </div>
+        <p class="muted small">
+          Bildekilde: Unsplash (fri kommersiell bruk). Du kan bytte bilde ved å endre URL i CSS/HTML.
+        </p>
+      </div>
+
+      <div class="footer-cols">
+        <div>
+          <h4>Snarveier</h4>
+          <a href="#tjenester">Tjenester</a>
+          <a href="#prosess">Prosess</a>
+          <a href="#leveranser">Leveranser</a>
+          <a href="#kontakt">Kontakt</a>
+        </div>
+        <div>
+          <h4>Juridisk</h4>
+          <a href="#" aria-disabled="true">Personvern (legg til)</a>
+          <a href="#" aria-disabled="true">Informasjonskapsler (legg til)</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container small muted">© <span id="year"></span> Sørhaug Consulting. Alle rettigheter reservert.</div>
+    </div>
+  </footer>
+
+  <script>
+    // Sørhaug Consulting – enkel interaksjon
+    (() => {
+      const year = document.getElementById("year");
+      if (year) year.textContent = new Date().getFullYear();
+
+      // Mobilmeny
+      const toggle = document.querySelector(".nav-toggle");
+      const nav = document.querySelector(".nav");
+      if (toggle && nav) {
+        toggle.addEventListener("click", () => {
+          const open = nav.classList.toggle("open");
+          toggle.setAttribute("aria-expanded", String(open));
+        });
+
+        nav.querySelectorAll("a").forEach(a => {
+          a.addEventListener("click", () => {
+            nav.classList.remove("open");
+            toggle.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+
+      // Kontakt-skjema -> mailto (ingen backend)
+      const form = document.getElementById("contactForm");
+      if (form) {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const name = (fd.get("name") || "").toString().trim();
+          const email = (fd.get("email") || "").toString().trim();
+          const location = (fd.get("location") || "").toString().trim();
+          const message = (fd.get("message") || "").toString().trim();
+
+          const subject = encodeURIComponent("Forespørsel – Tilstandsrapport / vedlikeholdsplan");
+          const body = encodeURIComponent(
+            `Navn: ${name}\nE-post: ${email}\nKommune / sted: ${location}\n\nBeskrivelse:\n${message}\n`
+          );
+
+          // Bytt e-post til deres ekte mottaksadresse
+          window.location.href = `mailto:post@sorhaugconsulting.no?subject=${subject}&body=${body}`;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
