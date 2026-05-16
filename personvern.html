@@ -12,10 +12,20 @@
     *{box-sizing:border-box;} html{scroll-behavior:smooth;} body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;color:var(--text);background:radial-gradient(1000px 650px at 10% -10%, rgba(37,99,235,.10), transparent 60%), radial-gradient(900px 600px at 100% 0%, rgba(180,83,9,.08), transparent 55%), var(--bg);line-height:1.7;}
     a{color:var(--accent2);text-decoration:none;} a:hover{text-decoration:underline;}
     .container{width:min(var(--max), calc(100% - 40px));margin:0 auto;} .section{padding:84px 0;}
-    .site-header{position:sticky;top:0;z-index:1000;backdrop-filter:blur(14px);background:rgba(255,255,255,.75);border-bottom:1px solid var(--line);} .header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:18px;} .brand{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none !important;} .brand-mark{width:40px;height:40px;border-radius:12px;display:inline-block;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 24px rgba(2,6,23,.10);} .brand-mark img{width:100%;height:100%;display:block;object-fit:contain;} .brand-text{display:flex;flex-direction:column;line-height:1.15;} .brand-text span{color:var(--muted);font-size:12.5px;margin-top:4px;} .nav{display:flex;align-items:center;gap:18px;} .nav a{color:var(--muted);font-weight:650;padding:10px 10px;border-radius:10px;text-decoration:none;} .nav a:hover{background:rgba(37,99,235,.08);color:var(--text);} .nav .btn-small{background:var(--accent2);border:1px solid var(--accent2);color:#ffffff !important;padding:10px 12px;border-radius:11px;font-size:14px;font-weight:800;text-decoration:none !important;} .nav-toggle{display:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.70);cursor:pointer;}  .nav-toggle span{display:block;width:20px;height:2px;background:var(--text);margin:5px auto;border-radius:2px;}
+    .site-header{position:sticky;top:0;z-index:1000;backdrop-filter:blur(14px);background:rgba(255,255,255,.75);border-bottom:1px solid var(--line);} .header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:18px;} .brand{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none !important;} .brand-mark{width:40px;height:40px;border-radius:12px;display:inline-block;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 24px rgba(2,6,23,.10);} .brand-mark img{width:100%;height:100%;display:block;object-fit:contain;} .brand-text{display:flex;flex-direction:column;line-height:1.15;} .brand-text span{color:var(--muted);font-size:12.5px;margin-top:4px;font-style:italic;} .nav{display:flex;align-items:center;gap:18px;} .nav a{color:var(--muted);font-weight:650;padding:10px 10px;border-radius:10px;text-decoration:none;} .nav a:hover{background:rgba(37,99,235,.08);color:var(--text);} .nav .btn-small{background:var(--accent2);border:1px solid var(--accent2);color:#ffffff !important;padding:10px 12px;border-radius:11px;font-size:14px;font-weight:800;text-decoration:none !important;} .nav-toggle{display:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.70);cursor:pointer;}  .nav-toggle span{display:block;width:20px;height:2px;background:var(--text);margin:5px auto;border-radius:2px;}
     .prose{max-width:72ch;} .prose h1{font-size:clamp(26px,3vw,38px);line-height:1.15;letter-spacing:-.2px;margin:0 0 8px;} .prose .lead{color:var(--muted);font-size:16px;margin:0 0 40px;} .prose h2{font-size:20px;font-weight:800;margin:40px 0 10px;padding-top:40px;border-top:1px solid var(--line);} .prose h2:first-of-type{border-top:none;padding-top:0;} .prose p{margin:0 0 14px;} .prose ul{padding-left:20px;margin:0 0 14px;} .prose li{margin:6px 0;} .prose strong{font-weight:750;} .prose table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;} .prose th,.prose td{text-align:left;padding:10px 12px;border:1px solid var(--line);} .prose th{background:rgba(37,99,235,.05);font-weight:750;} .meta-box{background:rgba(37,99,235,.05);border:1px solid rgba(37,99,235,.15);border-radius:12px;padding:16px 18px;margin-bottom:36px;font-size:14px;color:var(--muted);}
     .footer{border-top:1px solid var(--line);padding-top:28px;} .footer-inner{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;padding-bottom:18px;} .brand-foot{display:flex;gap:12px;align-items:center;margin-bottom:10px;} .footer-cols{display:flex;gap:28px;} .footer h4{margin:0 0 10px;font-size:14px;color:rgba(11,18,32,.92);} .footer a{display:block;color:var(--muted);padding:4px 0;} .footer-bottom{border-top:1px solid var(--line);padding:12px 0;background:rgba(2,6,23,.02);} .muted{color:var(--muted);} .small{font-size:12.5px;}
     @media(max-width:760px){.nav-toggle{display:block;} .nav{position:absolute;right:20px;top:66px;flex-direction:column;align-items:stretch;gap:6px;padding:10px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.96);box-shadow:var(--shadow);display:none;min-width:220px;} .nav.open{display:flex;} .nav a{padding:10px 12px;color:var(--text);} .footer-inner{flex-direction:column;} .footer-cols{flex-wrap:wrap;} .section{padding:56px 0;}}
+    /* Unified footer style (same as index) */
+    .footer{border-top:1px solid var(--line);background:#f1f3f5;padding-top:28px;}
+    .footer-inner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;align-items:start;padding-bottom:18px;}
+    .footer-block h3{margin:0 0 12px;font-size:26px;line-height:1.2;letter-spacing:-.2px;}
+    .footer-block p{margin:0 0 12px;color:rgba(11,18,32,.92);font-size:18px;line-height:1.45;max-width:34ch;}
+    .footer a{display:block;color:#0f3f97;font-weight:800;font-size:17px;padding:2px 0;text-decoration:none;}
+    .footer a:hover,.footer a:focus{text-decoration:underline;}
+    .footer-bottom{border-top:1px solid var(--line);padding:12px 0;background:#e9edf2;}
+    @media (max-width:980px){.footer-inner{grid-template-columns:1fr;gap:20px;}}
+    @media (max-width:760px){.footer{padding-top:20px;} .footer-inner{gap:28px;padding-bottom:20px;} .footer-block h3{font-size:20px;margin-bottom:10px;} .footer-block p{font-size:16px;line-height:1.4;margin-bottom:12px;} .footer a{font-size:17px;line-height:1.35;padding:2px 0;}}
   </style>
 </head>
 <body>
@@ -126,26 +136,38 @@
 
   <footer class="footer">
     <div class="container footer-inner">
-      <div>
-        <div class="brand-foot">
-          <span class="brand-mark" aria-hidden="true"><img src="images/logo.png" alt="" /></span>
-          <div><strong>Sørhaug Consulting</strong><div class="muted small">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div></div>
-        </div>
-      </div>
-      <div class="footer-cols">
-        <div>
-          <h4>Snarveier</h4>
-          <a href="tjenester.html">Tjenester</a>
-          <a href="prosess.html">Prosess</a>
-          <a href="leveranser.html">Leveranser</a>
-          <a href="index.html#kontakt">Kontakt</a>
-        </div>
-        <div>
-          <h4>Juridisk</h4>
-          <a href="personvern.html">Personvern</a>
-          <a href="informasjonskapsler.html">Informasjonskapsler</a>
-        </div>
-      </div>
+      <section class="footer-block">
+        <h3>Om Sørhaug Consulting</h3>
+        <p>
+          Sørhaug Consulting bistår kirkelige fellesråd og eiere av bevaringsverdige bygg med
+          teknisk tilstandsvurdering, vedlikeholdsplanlegging og trygg prosjektgjennomføring.
+        </p>
+        <a href="tjenester.html">Tjenester</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="kompetanse.html">Kompetanse</a>
+        <a href="leveranser.html">Leveranser</a>
+      </section>
+
+      <section class="footer-block">
+        <h3>Kontakt oss</h3>
+        <p>
+          Sørhaug Consulting<br />
+          Norge
+        </p>
+        <a href="tel:+4740849765">+47 408 49 765</a>
+        <a href="mailto:torgeir@sorhaugconsulting.no">Kontakt</a>
+      </section>
+
+      <section class="footer-block">
+        <h3>Om selskapet</h3>
+        <p>
+          Vi kombinerer byggteknisk kompetanse, antikvarisk forståelse og dokumentert metodikk
+          for å gi et trygt beslutningsgrunnlag for prioritering av tiltak.
+        </p>
+        <a href="omoss.html">Om oss</a>
+        <a href="personvern.html">Personvern</a>
+        <a href="informasjonskapsler.html">Informasjonskapsler</a>
+      </section>
     </div>
     <div class="footer-bottom">
       <div class="container small muted">© <span id="year"></span> Sørhaug Consulting. Alle rettigheter reservert.</div>
