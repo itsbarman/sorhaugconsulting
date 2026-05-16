@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Referanser | Sørhaug Consulting</title>
+  <meta name="description" content="Referanser fra Sørhaug Consulting. Prosjektledelse og vedlikeholdsetapper ved Skaun middelalderkirke." />
+  <meta name="theme-color" content="#0B4F6C" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Hopp til innhold</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html#top" aria-label="Sørhaug Consulting – hjem">
+        <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
+        <span class="brand-text">
+          <strong>Sørhaug Consulting</strong>
+          <span>- Bevarer verdier. Sikrer fremtiden</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" aria-label="Åpne meny" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="nav" aria-label="Hovedmeny">
+        <a href="index.html#top">Hjem</a>
+        <a href="tjenester.html">Tjenester</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="kompetanse.html">Kompetanse</a>
+        <a href="omoss.html">Om oss</a>
+        <a href="leveranser.html">Leveranser</a>
+        <a href="referanser.html">Referanser</a>
+        <a href="index.html#kontakt" class="btn btn-small">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section">
+      <div class="container" style="max-width:920px;">
+        <div class="section-head" style="margin-bottom:26px;">
+          <h1>Referanser</h1>
+          <p>Et utvalg oppdrag utført med fokus på antikvariske krav, kvalitet i gjennomforing og langsiktig bevaring.</p>
+        </div>
+
+        <article class="card" style="padding:28px;">
+          <h2 style="margin:0 0 10px;">Referanse: Skaun middelalderkirke</h2>
+          <p style="margin:0 0 18px;color:rgba(11,18,32,.9);">
+            Sørhaug har hatt ansvaret for prosjektledelsen ved to større vedlikeholdsetapper på Skaun middelalderkirke.
+            Arbeidet er utført i tråd med antikvariske retningslinjer for verneverdige bygg.
+          </p>
+
+          <div style="display:grid;gap:14px;">
+            <section class="mini" style="padding:16px;">
+              <h3 style="margin:0 0 6px;">2020: Utbedring av tårn og spir</h3>
+              <p style="margin:0;color:rgba(11,18,32,.88);">
+                Prosjektledelse for utbedring av råteskader i tårnkonstruksjon og spir. Oppdraget omfattet koordinering
+                av fagressurser, oppfølging av teknisk utførelse og sikring av fremdrift i henhold til godkjent tiltaksplan.
+              </p>
+            </section>
+
+            <section class="mini" style="padding:16px;">
+              <h3 style="margin:0 0 6px;">2022: Utskifting av taktekking</h3>
+              <p style="margin:0;color:rgba(11,18,32,.88);">
+                Total prosjektledelse for utskifting av kirkens skifertak. Arbeidet inkluderte planlegging, anskaffelser og
+                tett oppfølging av utførende ledd for å sikre korrekt materialbruk og kvalitet i alle detaljer.
+              </p>
+            </section>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <div class="brand-foot">
+          <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
+          <div>
+            <strong>Sørhaug Consulting</strong>
+            <div class="muted">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-cols">
+        <div>
+          <h4>Snarveier</h4>
+          <a href="index.html#top">Hjem</a>
+          <a href="tjenester.html">Tjenester</a>
+          <a href="referanser.html">Referanser</a>
+          <a href="index.html#kontakt">Kontakt</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container small muted">© <span id="year"></span> Sørhaug Consulting. Alle rettigheter reservert.</div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const year = document.getElementById("year");
+      if (year) year.textContent = new Date().getFullYear();
+
+      const toggle = document.querySelector(".nav-toggle");
+      const nav = document.querySelector(".nav");
+      if (toggle && nav) {
+        toggle.addEventListener("click", () => {
+          const open = nav.classList.toggle("open");
+          toggle.setAttribute("aria-expanded", String(open));
+        });
+
+        nav.querySelectorAll("a").forEach(a => {
+          a.addEventListener("click", () => {
+            nav.classList.remove("open");
+            toggle.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
