@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kompetanse – Sørhaug Consulting</title>
+  <meta name="description" content="Kompetanse og kvalitet hos Sørhaug Consulting – kulturminnehensyn, etterprøvbarhet, planlegging og profesjonell leveranse." />
+  <meta name="theme-color" content="#0B4F6C" />
+  <style>
+    :root{--bg:#ffffff;--text:#0B1220;--muted:#4B5563;--line:rgba(15,23,42,.12);--accent2:#2563EB;--accent3:#0F766E;--shadow:0 18px 45px rgba(2,6,23,.10);--radius:18px;--max:1120px;}
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;} body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;color:var(--text);background:radial-gradient(1000px 650px at 10% -10%, rgba(37,99,235,.10), transparent 60%), radial-gradient(900px 600px at 100% 0%, rgba(180,83,9,.08), transparent 55%), radial-gradient(900px 650px at 30% 110%, rgba(15,118,110,.07), transparent 55%), var(--bg);line-height:1.6;}
+    a{color:inherit;text-decoration:none;} a:hover{text-decoration:underline;}
+    .container{width:min(var(--max), calc(100% - 40px)); margin:0 auto;} .section{padding:84px 0;} .section-head{max-width:72ch;margin-bottom:24px;} .section-head h1,.section-head h2{margin:0 0 10px;letter-spacing:-.2px;} .section-head h1{font-size:clamp(30px,3.6vw,46px);line-height:1.12;} .section-head h2{font-size:30px;} .section-head p{margin:0;color:var(--muted);} 
+    .site-header{position:sticky;top:0;z-index:1000;backdrop-filter:blur(8px);background:rgba(255,255,255,.75);border-bottom:1px solid var(--line);backdrop-filter:blur(14px);} .header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:18px;} .brand{display:flex;align-items:center;gap:12px;} .brand-mark{width:40px;height:40px;border-radius:12px;display:inline-block;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 24px rgba(2,6,23,.10);} .brand-mark img{width:100%;height:100%;display:block;object-fit:contain;} .brand-text{display:flex;flex-direction:column;line-height:1.15;} .brand-text strong{color:var(--text);} .brand-text span{color:var(--muted);font-size:12.5px;margin-top:4px;} .nav{display:flex;align-items:center;gap:18px;} .nav a{color:var(--muted);font-weight:650;padding:10px 10px;border-radius:10px;} .nav a:hover{background:rgba(37,99,235,.08);text-decoration:none;color:var(--text);} .nav .btn.btn-small{background:var(--accent2);border:1px solid var(--accent2);color:#ffffff !important;box-shadow:0 10px 24px rgba(2,6,23,.10);} .nav-toggle{display:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.70);cursor:pointer;box-shadow:0 10px 24px rgba(2,6,23,.08);} .nav-toggle span{display:block;width:20px;height:2px;background:var(--text);margin:5px auto;border-radius:2px;opacity:.9;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;border:1px solid rgba(37,99,235,.35);background:var(--accent2);color:#ffffff;font-weight:800;box-shadow:0 14px 35px rgba(2,6,23,.10);text-decoration:none !important;} .btn:hover{transform:translateY(-1px);box-shadow:0 18px 45px rgba(2,6,23,.14);background:rgba(37,99,235,.9);} .btn:active{transform:translateY(0);} .btn-ghost{border:1px solid rgba(37,99,235,.18);background:rgba(255,255,255,.92);color:var(--text);} .btn-small{padding:10px 12px;border-radius:11px;font-size:14px;}
+    .card,.mini,.contact-card,.hero-card{background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,249,252,.90));border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 16px 42px rgba(2,6,23,.10);} .hero-card{padding:18px 18px 16px;} .hero-card h2{margin:4px 0 10px;font-size:18px;} .checklist{list-style:none;padding:0;margin:0;} .checklist li{padding-left:26px;position:relative;margin:10px 0;color:rgba(11,18,32,.90);} .checklist li:before{content:"✓";position:absolute;left:0;top:0;color:var(--accent3);font-weight:950;}
+    .split{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start;} .lead-sm{color:rgba(11,18,32,.86);font-size:17px;margin-top:6px;} .pill-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 16px;} .pill{padding:7px 10px;border-radius:999px;border:1px solid rgba(37,99,235,.18);background:rgba(37,99,235,.06);color:rgba(11,18,32,.86);font-weight:800;font-size:13px;} .mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;} .mini{padding:12px;} .mini h3{margin:0 0 6px;font-size:16px;} .mini p{margin:0;color:var(--muted);font-size:14px;} .image-card{margin:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 45px rgba(2,6,23,.10);background:rgba(255,255,255,.85);} .image-card img{width:100%;height:360px;object-fit:cover;} .image-card figcaption{padding:10px 12px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);background:rgba(255,255,255,.80);} .footer{border-top:1px solid var(--line);padding-top:28px;} .footer-inner{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;padding-bottom:18px;} .brand-foot{display:flex;gap:12px;align-items:center;margin-bottom:10px;} .footer-cols{display:flex;gap:28px;} .footer h4{margin:0 0 10px;font-size:14px;color:rgba(11,18,32,.92);} .footer a{display:block;color:var(--muted);padding:4px 0;} .footer-bottom{border-top:1px solid var(--line);padding:12px 0;background:rgba(2,6,23,.02);} .muted{color:var(--muted);} .small{font-size:12.5px;}
+    @media (max-width: 980px){.split{grid-template-columns:1fr;} .mini-grid{grid-template-columns:1fr;} .footer-inner{flex-direction:column;}}
+    @media (max-width: 760px){.nav-toggle{display:block;} .nav{position:absolute;right:20px;top:66px;flex-direction:column;align-items:stretch;gap:6px;padding:10px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.92);box-shadow:var(--shadow);display:none;min-width:220px;} .nav.open{display:flex;} .nav a{padding:10px 12px;color:var(--text);} .nav a:hover{color:var(--text);background:rgba(37,99,235,.08);} .nav .btn.btn-small{color:#fff !important;} .section{padding:64px 0;}}
+  </style>
+</head>
+<body>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="Sørhaug Consulting – hjem"><span class="brand-mark" aria-hidden="true"><img src="images/logo.png" alt="" /></span><span class="brand-text"><strong>Sørhaug Consulting</strong><span>Tilstandsrapporter • Vedlikeholdsplanlegging • Kirker</span></span></a>
+      <button class="nav-toggle" aria-label="Åpne meny" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+      <nav class="nav" id="nav" aria-label="Hovedmeny">
+        <a href="index.html">Hjem</a>
+        <a href="index.html#tjenester">Tjenester</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="kompetanse.html">Kompetanse</a>
+        <a href="omoss.html">Om oss</a>
+        <a href="leveranser.html">Leveranser</a>
+        <a href="index.html#kontakt" class="btn btn-small">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section">
+      <div class="container split">
+        <div>
+          <div class="section-head">
+            <h1>Kompetanse og kvalitet</h1>
+            <p>Vi kombinerer praktisk bygningsteknisk erfaring med strukturert rapportering – slik at resultatet kan brukes i forvaltning, budsjett og offentlige beslutningsprosesser.</p>
+          </div>
+          <p class="lead-sm">Vårt arbeid er bygget rundt kulturminnehensyn, etterprøvbar dokumentasjon og leveranser som er enkle å bruke i saksbehandling og langsiktig planlegging.</p>
+          <div class="pill-row">
+            <span class="pill">Kulturminnehensyn</span><span class="pill">TG 0–3</span><span class="pill">Prioritering</span><span class="pill">Kostnadsrammer</span><span class="pill">Dokumentasjon</span>
+          </div>
+          <div class="mini-grid">
+            <div class="mini"><h3>Etterprøvbarhet</h3><p>Vi dokumenterer avvik med beskrivelse, foto og begrunnede anbefalinger.</p></div>
+            <div class="mini"><h3>Planlegging</h3><p>Vedlikeholdsplan som kan oppdateres og brukes som styringsverktøy over tid.</p></div>
+            <div class="mini"><h3>Profesjonell leveranse</h3><p>Klart språk, ryddig struktur og rapport som fungerer i sak/arkiv.</p></div>
+          </div>
+        </div>
+        <figure class="image-card">
+          <img src="images/Bilder nettside/826109c0-76ca-4a3d-b2c5-c1cef4088518.jpg" alt="Kirke i sollys" loading="lazy" />
+          <figcaption>Et ekstra prosjektbilde som støtter hoveduttrykket i hero-collagen over.</figcaption>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div><div class="brand-foot"><span class="brand-mark" aria-hidden="true"><img src="images/logo.png" alt="" /></span><div><strong>Sørhaug Consulting</strong><div class="muted">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div></div></div><p class="muted small">© <span id="year"></span> Sørhaug Consulting. Alle rettigheter reservert.</p></div>
+      <div class="footer-cols"><div><h4>Snarveier</h4><a href="index.html#tjenester">Tjenester</a><a href="prosess.html">Prosess</a><a href="kompetanse.html">Kompetanse</a><a href="leveranser.html">Leveranser</a></div><div><h4>Sider</h4><a href="index.html">Hjem</a><a href="omoss.html">Om oss</a></div></div>
+    </div>
+    <div class="footer-bottom"><div class="container small muted">Sørhaug Consulting</div></div>
+  </footer>
+
+  <script>
+    (() => { const year = document.getElementById('year'); if (year) year.textContent = new Date().getFullYear(); const toggle = document.querySelector('.nav-toggle'); const nav = document.querySelector('.nav'); if (toggle && nav) { toggle.addEventListener('click', () => { const open = nav.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); }); nav.querySelectorAll('a').forEach((link) => { link.addEventListener('click', () => { nav.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }); }); } })();
+  </script>
+</body>
+</html>

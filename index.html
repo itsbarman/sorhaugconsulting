@@ -8,8 +8,6 @@
   <meta name="description" content="Sørhaug Consulting leverer profesjonelle tilstandsrapporter og vedlikeholdsplaner for kirker og bevaringsverdige bygg i Norge – fra befaring til beslutningsgrunnlag." />
   <meta name="theme-color" content="#0B4F6C" />
 
-  <link rel="preconnect" href="https://source.unsplash.com" crossorigin>
-
   <style>
     /* Sørhaug Consulting – lys (hvit) variant */
     :root{
@@ -90,13 +88,14 @@
     .brand-mark{
       width: 40px; height: 40px;
       border-radius: 12px;
-      display:grid; place-items:center;
-      background: linear-gradient(135deg, rgba(180,83,9,.18), rgba(37,99,235,.14));
+      display:inline-block;
+      overflow:hidden;
       border:1px solid var(--line);
       box-shadow: 0 10px 24px rgba(2,6,23,.10);
-      font-weight: 900;
-      letter-spacing: .5px;
-      color: #0B1220;
+    }
+    .brand-mark img{
+      width:100%; height:100%; display:block; object-fit:contain;
+      background: transparent;
     }
     .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
     .brand-text span{ color: var(--muted); font-size: 12.5px; margin-top: 4px; }
@@ -107,6 +106,13 @@
       font-weight: 650;
       padding: 10px 10px;
       border-radius: 10px;
+    }
+    /* Ensure buttons inside the nav use white text for contrast */
+    .nav a.btn{
+      color: #ffffff !important;
+      background: var(--accent2) !important;
+      border-color: var(--accent2) !important;
+      box-shadow: 0 10px 24px rgba(2,6,23,.10);
     }
     .nav a:hover{
       background: rgba(37,99,235,.08);
@@ -132,28 +138,96 @@
       opacity:.9;
     }
 
-    /* Hero image under nav (30% høyde) */
-    .hero-image{
-      height: 30vh;
-      min-height: 240px;
-      max-height: 420px;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.78)),
-        radial-gradient(900px 520px at 30% 15%, rgba(37,99,235,.20), transparent 55%),
-        radial-gradient(900px 520px at 80% 30%, rgba(180,83,9,.14), transparent 55%),
-        url("images/hero.svg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+    /* Hero collage under nav */
+    .hero-collage{
+      position:relative;
+      overflow:hidden;
       border-bottom: 1px solid var(--line);
-      position: relative;
+      background: #0B1220;
+      min-height: clamp(300px, 34vw, 460px);
     }
-    .hero-image::after{
+    .hero-collage__grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      min-height: inherit;
+    }
+    .hero-collage__tile{
+      margin:0;
+      position:relative;
+      min-height: inherit;
+      overflow:hidden;
+      background: #0B1220;
+    }
+    .hero-collage__tile img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+      transform: scale(1.01);
+    }
+    .hero-collage__tile::after{
       content:"";
       position:absolute;
-      left:0; right:0; bottom:0;
-      height: 90px;
-      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+      inset:0;
+      background: linear-gradient(180deg, rgba(2,6,23,.08), rgba(2,6,23,.22));
+    }
+    .hero-collage__tile:nth-child(1) img{ object-position: center 26%; }
+    .hero-collage__tile:nth-child(2) img{ object-position: center 30%; }
+    .hero-collage__tile:nth-child(3) img{ object-position: center 34%; }
+    .hero-collage__tile:nth-child(4) img{ object-position: center 30%; }
+    .hero-collage__overlay{
+      position:absolute;
+      left: clamp(16px, 3vw, 36px);
+      bottom: clamp(16px, 3vw, 36px);
+      z-index: 2;
+      max-width: min(560px, calc(100% - 32px));
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(180deg, rgba(11,18,32,.56), rgba(11,18,32,.40));
+      backdrop-filter: blur(12px);
+      color: #ffffff;
+      box-shadow: 0 18px 40px rgba(2,6,23,.24);
+    }
+    .hero-collage__logo{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 3;
+      width: min(24vw, 220px);
+      max-width: calc(100% - 48px);
+      display:block;
+      padding: 8px 10px;
+      border-radius: 18px;
+      border: 0;
+      background: #ffffff;
+      box-shadow: none;
+      backdrop-filter: none;
+      transform: translate(-50%, -50%);
+    }
+    .hero-collage__logo img{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+    .hero-collage__eyebrow{
+      margin:0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,.74);
+    }
+    .hero-collage__overlay h2{
+      margin:0 0 8px;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.1;
+      letter-spacing: -.2px;
+    }
+    .hero-collage__overlay p{
+      margin:0;
+      color: rgba(255,255,255,.82);
+      max-width: 60ch;
     }
 
     /* Buttons */
@@ -162,9 +236,9 @@
       gap:8px;
       padding: 12px 16px;
       border-radius: 12px;
-      border: 1px solid rgba(180,83,9,.35);
-      background: linear-gradient(135deg, rgba(180,83,9,.12), rgba(37,99,235,.08));
-      color: var(--text);
+      border: 1px solid rgba(37,99,235,.35);
+      background: var(--accent2);
+      color: #ffffff;
       font-weight: 800;
       box-shadow: 0 14px 35px rgba(2,6,23,.10);
       text-decoration:none !important;
@@ -172,12 +246,14 @@
     .btn:hover{
       transform: translateY(-1px);
       box-shadow: 0 18px 45px rgba(2,6,23,.14);
+      background: rgba(37,99,235,.9);
     }
     .btn:active{ transform: translateY(0); }
 
     .btn-ghost{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.70);
+      border: 1px solid var(--accent2);
+      background: #ffffff;
+      color: var(--text);
     }
     .btn-small{ padding: 10px 12px; border-radius: 11px; font-size: 14px; }
 
@@ -434,6 +510,7 @@
       .contact-cards{ grid-template-columns: 1fr; }
       .footer-inner{ flex-direction:column; }
       .cta-bar{ flex-direction:column; align-items:flex-start; }
+      .hero-collage__grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 760px){
       .nav-toggle{ display:block; }
@@ -454,6 +531,17 @@
       }
       .nav.open{ display:flex; }
       .nav a{ padding: 10px 12px; }
+      .hero-collage{ min-height: auto; }
+      .hero-collage__grid{ grid-template-columns: 1fr; }
+      /* Show only the second tile (2.jpg) on small screens */
+      .hero-collage__tile{ display:none; }
+      .hero-collage__tile.tile-2{ display:block; min-height: 220px; }
+      .hero-collage__logo{ width: min(42vw, 170px); max-width: calc(100% - 32px); }
+      .hero-collage__overlay{
+        position: static;
+        max-width: none;
+        margin: 16px;
+      }
     }
   </style>
 </head>
@@ -464,7 +552,7 @@
   <header class="site-header" id="top">
     <div class="container header-inner">
       <a class="brand" href="#top" aria-label="Sørhaug Consulting – hjem">
-        <span class="brand-mark" aria-hidden="true">SC</span>
+        <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
         <span class="brand-text">
           <strong>Sørhaug Consulting</strong>
           <span>Tilstandsrapporter • Vedlikeholdsplanlegging • Kirker</span>
@@ -476,17 +564,36 @@
       </button>
 
       <nav class="nav" id="nav" aria-label="Hovedmeny">
+        <a href="#top">Hjem</a>
         <a href="#tjenester">Tjenester</a>
-        <a href="#prosess">Prosess</a>
-        <a href="#kompetanse">Kompetanse</a>
-        <a href="#leveranser">Leveranser</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="kompetanse.html">Kompetanse</a>
+        <a href="omoss.html">Om oss</a>
+        <a href="leveranser.html">Leveranser</a>
         <a href="#kontakt" class="btn btn-small">Kontakt</a>
       </nav>
     </div>
   </header>
 
-  <!-- STORT BILDE UNDER NAV (ca 30% høyde) -->
-  <section class="hero-image" aria-label="Kirke i Norge"></section>
+  <!-- HERO COLLAGE UNDER NAV -->
+  <section class="hero-collage" aria-label="Fire bilder av kirken">
+    <div class="hero-collage__grid" aria-hidden="true">
+      <figure class="hero-collage__tile">
+        <img src="images/Bilder nettside/1.jpg" alt="" loading="eager" fetchpriority="high" />
+      </figure>
+      <figure class="hero-collage__tile tile-2">
+        <img src="images/Bilder nettside/2.jpg" alt="" loading="eager" fetchpriority="high" />
+      </figure>
+      <figure class="hero-collage__tile">
+        <img src="images/Bilder nettside/5.jpg" alt="" loading="eager" fetchpriority="high" />
+      </figure>
+      <figure class="hero-collage__tile">
+        <img src="images/Bilder nettside/72122393-09a9-45dd-919f-77e260143765.jpg" alt="" loading="eager" fetchpriority="high" />
+      </figure>
+    </div>
+
+
+  </section>
 
   <main id="main">
 
@@ -503,7 +610,7 @@
 
           <div class="hero-cta">
             <a class="btn" href="#kontakt">Be om tilbud</a>
-            <a class="btn btn-ghost" href="#leveranser">Se leveranser</a>
+            <a class="btn btn-ghost" href="leveranser.html">Se leveranser</a>
           </div>
 
           <div class="trust">
@@ -523,17 +630,17 @@
         </div>
 
         <aside class="hero-card" aria-label="Hurtiginfo">
-          <h2>Hva du får</h2>
-          <ul class="checklist">
-            <li>Systematisk vurdering av bygningsdeler og tekniske anlegg</li>
-            <li>Avvik, årsak, konsekvens og anbefalt tiltak</li>
-            <li>Prioritering (H/M/L) og kostnadsrammer</li>
-            <li>Vern/antikvariske hensyn tydeliggjort</li>
-            <li>Rapport i Word/PDF + Excel-grunnlag</li>
-          </ul>
+            <h2>Hva du får</h2>
+            <ul class="checklist">
+              <li>Full oversikt over kirkebyggets tekniske status</li>
+              <li>Grundig teknisk gjennomgang av eldre kirkebygg</li>
+              <li>Identifisering av skader og risikofaktorer</li>
+              <li>Skreddersydde 10-årige vedlikeholdsplaner med kostnadsanslag</li>
+              <li>Rapport i Word/PDF og maskinlesbart Excel-grunnlag</li>
+            </ul>
           <div class="card-actions">
             <a class="btn btn-small" href="#kontakt">Kontakt oss</a>
-            <a class="link" href="#prosess">Slik jobber vi →</a>
+            <a class="link" href="prosess.html">Slik jobber vi →</a>
           </div>
         </aside>
       </div>
@@ -549,164 +656,34 @@
 
         <div class="grid-3">
           <article class="card">
-            <h3>Tilstandsrapport</h3>
-            <p>Strukturert gjennomgang av bygningsdeler og tekniske anlegg med TG 0–3, avvik, konsekvens og tiltak.</p>
+            <h3>1. Tilstandsanalyse og vedlikeholdsplan</h3>
+            <p>Full oversikt over teknisk tilstand og behov for tiltak. Vi gjennomfører grundige, systematiske undersøkelser og leverer en skreddersydd 10-årig vedlikeholdsplan.</p>
             <ul class="bullets">
-              <li>Befaring + dokumentgjennomgang</li>
-              <li>Fotodokumentasjon og merknader</li>
-              <li>Risiko-/konsekvensvurdering</li>
+              <li>Grundig teknisk gjennomgang av eldre kirkebygg</li>
+              <li>Identifisering av skader, årsaker og risikofaktorer</li>
+              <li>Prioriterte tiltak med kostnadsanslag og tidsplassering</li>
             </ul>
           </article>
 
           <article class="card">
-            <h3>Vedlikeholdsplan (10 år)</h3>
-            <p>Prioriterte tiltak med kostnadsanslag og tidslinje – laget for budsjett, styresaker og saksbehandling.</p>
+            <h3>2. Prosjektledelse</h3>
+            <p>Vi styrer komplekse restaurerings- og vedlikeholdsprosjekter trygt innen tids- og kostnadsrammer, med særskilt fokus på antikvariske krav.</p>
             <ul class="bullets">
-              <li>År 1 / 2–5 / 6–10</li>
-              <li>H/M/L-prioritet</li>
-              <li>Kostnadsrammer og tiltaksstrategi</li>
+              <li>Spesialisert ledelse av restaureringsprosjekter</li>
+              <li>Oppfølging av antikvariske krav og håndverkere</li>
+              <li>Koordinering, kvalitetssikring og fremdriftsstyring</li>
             </ul>
           </article>
 
           <article class="card">
-            <h3>Antikvarisk rådgivning</h3>
-            <p>Vurderinger med hensyn til verneverdier, materialbruk og utførelse – og hvordan tiltak kan gjennomføres skånsomt.</p>
+            <h3>3. FDV-rådgivning</h3>
+            <p>Rådgivning innen Forvaltning, Drift og Vedlikehold for fellesråd og eiere – inkludert støtte i finansieringsprosesser.</p>
             <ul class="bullets">
-              <li>Vernestatus og kravbildet</li>
-              <li>Material- og detaljforståelse</li>
-              <li>Bevaringsstrategi</li>
+              <li>Strategisk FDV-rådgivning og beslutningsstøtte</li>
+              <li>Bistand med søknader til statlig og regional finansiering</li>
+              <li>Langsiktig forvaltning av kulturminneverdier</li>
             </ul>
           </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- PROSESS -->
-    <section class="section section-alt" id="prosess">
-      <div class="container">
-        <div class="section-head">
-          <h2>Prosess</h2>
-          <p>Forutsigbar leveranse – dokumentert og etterprøvbar. Tilpasset offentlige anskaffelser.</p>
-        </div>
-
-        <ol class="steps">
-          <li>
-            <h3>1. Oppstart & avklaringer</h3>
-            <p>Omfang, bygningstype, vernestatus, tilgjengelig dokumentasjon og ønsket detaljeringsnivå.</p>
-          </li>
-          <li>
-            <h3>2. Befaring & dokumentasjon</h3>
-            <p>Visuell kontroll, målinger ved behov, fotodokumentasjon og registrering av avvik.</p>
-          </li>
-          <li>
-            <h3>3. Tilstandsvurdering</h3>
-            <p>Tilstandsgrad (TG 0–3) per bygningsdel/anlegg, med årsak, konsekvens og anbefalt tiltak.</p>
-          </li>
-          <li>
-            <h3>4. Tiltaksplan & kostnadsrammer</h3>
-            <p>Prioritet (H/M/L), tidsplassering (År 1 / 2–5 / 6–10) og kostnadsanslag per tiltak.</p>
-          </li>
-          <li>
-            <h3>5. Leveranse & gjennomgang</h3>
-            <p>Rapport i Word/PDF + Excel-grunnlag. Vi gjennomgår funn og anbefalinger med oppdragsgiver.</p>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- KOMPETANSE -->
-    <section class="section" id="kompetanse">
-      <div class="container split">
-        <div>
-          <h2>Kompetanse og kvalitet</h2>
-          <p class="lead-sm">
-            Vi kombinerer praktisk bygningsteknisk erfaring med strukturert rapportering – slik at resultatet kan brukes i
-            forvaltning, budsjett og offentlige beslutningsprosesser.
-          </p>
-
-          <div class="pill-row">
-            <span class="pill">Kulturminnehensyn</span>
-            <span class="pill">TG 0–3</span>
-            <span class="pill">Prioritering</span>
-            <span class="pill">Kostnadsrammer</span>
-            <span class="pill">Dokumentasjon</span>
-          </div>
-
-          <div class="mini-grid">
-            <div class="mini">
-              <h3>Etterprøvbarhet</h3>
-              <p>Vi dokumenterer avvik med beskrivelse, foto og begrunnede anbefalinger.</p>
-            </div>
-            <div class="mini">
-              <h3>Planlegging</h3>
-              <p>Vedlikeholdsplan som kan oppdateres og brukes som styringsverktøy over tid.</p>
-            </div>
-            <div class="mini">
-              <h3>Profesjonell leveranse</h3>
-              <p>Klart språk, ryddig struktur og rapport som fungerer i sak/arkiv.</p>
-            </div>
-          </div>
-        </div>
-
-        <figure class="image-card">
-          <img
-            src="https://source.unsplash.com/ZSMlc6BWz3o/1200x900"
-            alt="Historisk stavkirke i Norge"
-            loading="lazy"
-          />
-          <figcaption>
-            Foto: Lokalt SVG-bilde (images/hero.svg). Bytt filen i <code>images/hero.svg</code> for å endre hero-bildet.
-          </figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <!-- LEVERANSER -->
-    <section class="section section-alt" id="leveranser">
-      <div class="container">
-        <div class="section-head">
-          <h2>Leveranser</h2>
-          <p>Alt du trenger for å prioritere, bestille og planlegge tiltak – i formater som passer drift og saksbehandling.</p>
-        </div>
-
-        <div class="grid-3">
-          <article class="card">
-            <h3>Word/PDF-rapport</h3>
-            <p>Beslutningsgrunnlag med sammendrag, funn per bygningsdel, tiltak og anbefalinger.</p>
-            <ul class="bullets">
-              <li>Klart, offentlig språk</li>
-              <li>Vedlegg/foto ved behov</li>
-              <li>Tilpasset arkiv/saksbehandling</li>
-            </ul>
-          </article>
-
-          <article class="card">
-            <h3>Excel-grunnlag</h3>
-            <p>Planleggingsverktøy for videre oppfølging – filtrering, prioritering og oppdatering over tid.</p>
-            <ul class="bullets">
-              <li>Automatisk fargekoding av TG</li>
-              <li>Rullegardinvalg for TG og prioritet</li>
-              <li>10-årig planstruktur</li>
-            </ul>
-          </article>
-
-          <article class="card">
-            <h3>Tiltaksoversikt</h3>
-            <p>En ryddig oversikt over tiltak – hva, hvorfor, når og til hvilken ramme.</p>
-            <ul class="bullets">
-              <li>År 1 / 2–5 / 6–10</li>
-              <li>H/M/L-prioritet</li>
-              <li>Kostnadsrammer</li>
-            </ul>
-          </article>
-        </div>
-
-        <div class="cta-bar">
-          <div>
-            <h3>Klar for en strukturert tilstandsrapport?</h3>
-            <p>Send oss kort info om bygg, lokasjon og ønsket omfang – så svarer vi med forslag til leveranse og prisramme.</p>
-          </div>
-          <a class="btn" href="#kontakt">Be om tilbud</a>
         </div>
       </div>
     </section>
@@ -768,14 +745,14 @@
     <div class="container footer-inner">
       <div>
         <div class="brand-foot">
-          <span class="brand-mark" aria-hidden="true">SC</span>
+          <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
           <div>
             <strong>Sørhaug Consulting</strong>
             <div class="muted">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div>
           </div>
         </div>
         <p class="muted small">
-          Bildekilde: Unsplash (fri kommersiell bruk). Du kan bytte bilde ved å endre URL i CSS/HTML.
+          Bildekilde: lokale prosjektfoto fra mappen images/Bilder nettside/. Du kan enkelt bytte rekkefølge eller motiv i HTML.
         </p>
       </div>
 
@@ -783,8 +760,8 @@
         <div>
           <h4>Snarveier</h4>
           <a href="#tjenester">Tjenester</a>
-          <a href="#prosess">Prosess</a>
-          <a href="#leveranser">Leveranser</a>
+          <a href="prosess.html">Prosess</a>
+          <a href="leveranser.html">Leveranser</a>
           <a href="#kontakt">Kontakt</a>
         </div>
         <div>
@@ -820,6 +797,20 @@
             toggle.setAttribute("aria-expanded", "false");
           });
         });
+        // Hjem-lenke: hopp direkte til toppen uten smooth-scroll
+        const homeLink = nav.querySelector('a[href="#top"]');
+        if (homeLink) {
+          homeLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            // umiddelbar hopp til toppen
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            // lukk mobilmeny hvis åpen
+            if (nav.classList.contains('open')) {
+              nav.classList.remove('open');
+              toggle.setAttribute('aria-expanded', 'false');
+            }
+          });
+        }
       }
 
       // Kontakt-skjema -> mailto (ingen backend)
