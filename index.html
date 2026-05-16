@@ -8,542 +8,7 @@
   <meta name="description" content="Sørhaug Consulting leverer profesjonelle tilstandsrapporter og vedlikeholdsplaner for kirker og bevaringsverdige bygg i Norge – fra befaring til beslutningsgrunnlag." />
   <meta name="theme-color" content="#0B4F6C" />
 
-  <style>
-    /* Sørhaug Consulting – lys (hvit) variant */
-    :root{
-      --bg:#ffffff;
-      --surface:#ffffff;
-      --surface2:#F6F9FC;
-      --text:#0B1220;
-      --muted:#4B5563;
-      --line:rgba(15,23,42,.12);
-
-      --accent:#B45309;     /* varm rav */
-      --accent2:#2563EB;    /* klar blå */
-      --accent3:#0F766E;    /* rolig grønn */
-
-      --shadow: 0 18px 45px rgba(2, 6, 23, .10);
-      --radius: 18px;
-      --max: 1120px;
-    }
-
-    *{ box-sizing:border-box; }
-    html{ scroll-behavior:smooth; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1000px 650px at 10% -10%, rgba(37, 99, 235, .10), transparent 60%),
-        radial-gradient(900px 600px at 100% 0%, rgba(180, 83, 9, .08), transparent 55%),
-        radial-gradient(900px 650px at 30% 110%, rgba(15, 118, 110, .07), transparent 55%),
-        var(--bg);
-      line-height:1.6;
-    }
-
-    a{ color:inherit; text-decoration:none; }
-    a:hover{ text-decoration:underline; }
-
-    .container{ width:min(var(--max), calc(100% - 40px)); margin:0 auto; }
-
-    .section{ padding: 84px 0; }
-    .section-alt{
-      background: linear-gradient(180deg, rgba(2,6,23,.03), rgba(2,6,23,.00));
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .skip{
-      position:absolute;
-      left:-999px; top:auto;
-      width:1px; height:1px;
-      overflow:hidden;
-    }
-    .skip:focus{
-      left: 16px; top: 16px;
-      width:auto; height:auto;
-      padding:10px 12px;
-      background: var(--surface);
-      border:1px solid var(--line);
-      border-radius: 10px;
-      z-index: 9999;
-      box-shadow: var(--shadow);
-    }
-
-    /* Header */
-    .site-header{
-      position:sticky; top:0; z-index:1000;
-      backdrop-filter: blur(14px);
-      background: rgba(255,255,255,.75);
-      border-bottom: 1px solid var(--line);
-    }
-    .header-inner{
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 14px 0;
-      gap: 18px;
-    }
-    .brand{
-      display:flex; align-items:center; gap: 12px;
-    }
-    .brand-mark{
-      width: 40px; height: 40px;
-      border-radius: 12px;
-      display:inline-block;
-      overflow:hidden;
-      border:1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(2,6,23,.10);
-    }
-    .brand-mark img{
-      width:100%; height:100%; display:block; object-fit:contain;
-      background: transparent;
-    }
-    .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
-    .brand-text span{ color: var(--muted); font-size: 12.5px; margin-top: 4px; }
-
-    .nav{ display:flex; align-items:center; gap: 18px; }
-    .nav a{
-      color: var(--muted);
-      font-weight: 650;
-      padding: 10px 10px;
-      border-radius: 10px;
-    }
-    /* Ensure buttons inside the nav use white text for contrast */
-    .nav a.btn{
-      color: #ffffff !important;
-      background: var(--accent2) !important;
-      border-color: var(--accent2) !important;
-      box-shadow: 0 10px 24px rgba(2,6,23,.10);
-    }
-    .nav a:hover{
-      background: rgba(37,99,235,.08);
-      text-decoration:none;
-      color: var(--text);
-    }
-
-    .nav-toggle{
-      display:none;
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.70);
-      cursor:pointer;
-      box-shadow: 0 10px 24px rgba(2,6,23,.08);
-    }
-    .nav-toggle span{
-      display:block;
-      width: 20px; height: 2px;
-      background: var(--text);
-      margin: 5px auto;
-      border-radius: 2px;
-      opacity:.9;
-    }
-
-    /* Hero collage under nav */
-    .hero-collage{
-      position:relative;
-      overflow:hidden;
-      border-bottom: 1px solid var(--line);
-      background: #0B1220;
-      min-height: clamp(300px, 34vw, 460px);
-    }
-    .hero-collage__grid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      min-height: inherit;
-    }
-    .hero-collage__tile{
-      margin:0;
-      position:relative;
-      min-height: inherit;
-      overflow:hidden;
-      background: #0B1220;
-    }
-    .hero-collage__tile img{
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit:cover;
-      transform: scale(1.01);
-    }
-    .hero-collage__tile::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: linear-gradient(180deg, rgba(2,6,23,.08), rgba(2,6,23,.22));
-    }
-    .hero-collage__tile:nth-child(1) img{ object-position: center 26%; }
-    .hero-collage__tile:nth-child(2) img{ object-position: center 30%; }
-    .hero-collage__tile:nth-child(3) img{ object-position: center 34%; }
-    .hero-collage__tile:nth-child(4) img{ object-position: center 30%; }
-    .hero-collage__overlay{
-      position:absolute;
-      left: clamp(16px, 3vw, 36px);
-      bottom: clamp(16px, 3vw, 36px);
-      z-index: 2;
-      max-width: min(560px, calc(100% - 32px));
-      padding: 18px 20px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: linear-gradient(180deg, rgba(11,18,32,.56), rgba(11,18,32,.40));
-      backdrop-filter: blur(12px);
-      color: #ffffff;
-      box-shadow: 0 18px 40px rgba(2,6,23,.24);
-    }
-    .hero-collage__logo{
-      position:absolute;
-      left: 50%;
-      top: 50%;
-      z-index: 3;
-      width: min(24vw, 220px);
-      max-width: calc(100% - 48px);
-      display:block;
-      padding: 8px 10px;
-      border-radius: 18px;
-      border: 0;
-      background: #ffffff;
-      box-shadow: none;
-      backdrop-filter: none;
-      transform: translate(-50%, -50%);
-    }
-    .hero-collage__logo img{
-      width:100%;
-      height:auto;
-      display:block;
-    }
-    .hero-collage__eyebrow{
-      margin:0 0 8px;
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,.74);
-    }
-    .hero-collage__overlay h2{
-      margin:0 0 8px;
-      font-size: clamp(22px, 3vw, 34px);
-      line-height: 1.1;
-      letter-spacing: -.2px;
-    }
-    .hero-collage__overlay p{
-      margin:0;
-      color: rgba(255,255,255,.82);
-      max-width: 60ch;
-    }
-
-    /* Buttons */
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:8px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1px solid rgba(37,99,235,.35);
-      background: var(--accent2);
-      color: #ffffff;
-      font-weight: 800;
-      box-shadow: 0 14px 35px rgba(2,6,23,.10);
-      text-decoration:none !important;
-    }
-    .btn:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 18px 45px rgba(2,6,23,.14);
-      background: rgba(37,99,235,.9);
-    }
-    .btn:active{ transform: translateY(0); }
-
-    .btn-ghost{
-      border: 1px solid var(--accent2);
-      background: #ffffff;
-      color: var(--text);
-    }
-    .btn-small{ padding: 10px 12px; border-radius: 11px; font-size: 14px; }
-
-    /* Intro */
-    .intro{ padding-top: 72px; }
-    .intro-inner{
-      display:grid;
-      grid-template-columns: 1.35fr .85fr;
-      gap: 24px;
-      align-items:start;
-    }
-    .eyebrow{
-      display:inline-flex;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(37,99,235,.28);
-      background: rgba(37,99,235,.08);
-      color: #0B1220;
-      font-weight: 800;
-      font-size: 13px;
-    }
-    h1{
-      margin: 14px 0 10px;
-      font-size: clamp(30px, 3.6vw, 46px);
-      line-height: 1.12;
-      letter-spacing: -0.2px;
-    }
-    .lead{
-      margin: 0 0 18px;
-      color: rgba(11,18,32,.86);
-      font-size: 18px;
-      max-width: 62ch;
-    }
-    .hero-cta{ display:flex; gap:12px; flex-wrap:wrap; margin: 18px 0 18px; }
-
-    .trust{
-      display:flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-    .trust-item{
-      background: rgba(255,255,255,.78);
-      border: 1px solid var(--line);
-      padding: 10px 12px;
-      border-radius: 14px;
-      min-width: 160px;
-      box-shadow: 0 10px 22px rgba(2,6,23,.06);
-    }
-    .trust-kpi{ font-weight: 950; color: var(--accent); font-size: 18px; display:block; }
-    .trust-label{ color: var(--muted); font-size: 13px; }
-
-    .hero-card{
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(246,249,252,.88));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px 18px 16px;
-    }
-    .hero-card h2{ margin: 4px 0 10px; font-size: 18px; }
-
-    /* Lists */
-    .checklist{ list-style:none; padding:0; margin:0; }
-    .checklist li{
-      padding-left: 26px;
-      position:relative;
-      margin: 10px 0;
-      color: rgba(11,18,32,.90);
-    }
-    .checklist li:before{
-      content:"✓";
-      position:absolute; left:0; top:0;
-      color: var(--accent3);
-      font-weight: 950;
-    }
-    .card-actions{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top: 12px; }
-    .link{ color: var(--accent2); font-weight: 800; }
-    .link:hover{ text-decoration:underline; }
-
-    /* Sections */
-    .section-head{ max-width: 72ch; margin-bottom: 24px; }
-    .section-head h2{ margin:0 0 10px; font-size: 30px; letter-spacing:-.2px; }
-    .section-head p{ margin:0; color: var(--muted); }
-
-    .grid-3{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,249,252,.90));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: 0 16px 42px rgba(2,6,23,.10);
-    }
-    .card h3{ margin:0 0 8px; }
-    .card p{ margin:0 0 10px; color: rgba(11,18,32,.86); }
-    .bullets{ margin: 0; padding-left: 18px; color: var(--muted); }
-    .bullets li{ margin: 6px 0; }
-
-    /* Steps */
-    .steps{
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display:grid;
-      gap: 12px;
-    }
-    .steps li{
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px 16px 14px;
-      background: rgba(255,255,255,.75);
-      box-shadow: 0 12px 28px rgba(2,6,23,.06);
-      position:relative;
-    }
-    .steps li h3{ margin:0 0 6px; }
-    .steps li p{ margin:0; color: var(--muted); }
-
-    /* Split */
-    .split{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 22px;
-      align-items:start;
-    }
-    .lead-sm{ color: rgba(11,18,32,.86); font-size: 17px; margin-top: 6px; }
-    .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin: 14px 0 16px; }
-    .pill{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(37,99,235,.18);
-      background: rgba(37,99,235,.06);
-      color: rgba(11,18,32,.86);
-      font-weight: 800;
-      font-size: 13px;
-    }
-    .mini-grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .mini{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.75);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 10px 22px rgba(2,6,23,.06);
-    }
-    .mini h3{ margin:0 0 6px; font-size: 16px; }
-    .mini p{ margin:0; color: var(--muted); font-size: 14px; }
-
-    .image-card{
-      margin:0;
-      border-radius: var(--radius);
-      overflow:hidden;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      background: rgba(255,255,255,.85);
-    }
-    .image-card img{ width:100%; height: 360px; object-fit: cover; }
-    .image-card figcaption{
-      padding: 10px 12px;
-      color: var(--muted);
-      font-size: 12.5px;
-      border-top: 1px solid var(--line);
-      background: rgba(255,255,255,.80);
-    }
-
-    /* CTA bar */
-    .cta-bar{
-      margin-top: 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 14px;
-      padding: 18px;
-      border-radius: var(--radius);
-      border: 1px solid rgba(180,83,9,.22);
-      background: linear-gradient(135deg, rgba(180,83,9,.10), rgba(37,99,235,.06));
-      box-shadow: 0 16px 38px rgba(2,6,23,.08);
-    }
-    .cta-bar h3{ margin:0 0 6px; }
-    .cta-bar p{ margin:0; color: var(--muted); max-width: 70ch; }
-
-    /* Contact */
-    .contact-cards{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 14px;
-    }
-    .contact-card{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.78);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 12px 28px rgba(2,6,23,.06);
-    }
-    .contact-card h3{ margin:0 0 6px; font-size: 15px; }
-    .contact-card p{ margin:0 0 6px; }
-    .contact-card small{ color: var(--muted); }
-
-    .form h3{ margin:0 0 12px; }
-    label{ display:block; font-weight: 800; margin: 10px 0 6px; color: rgba(11,18,32,.90); }
-    input, textarea{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(15,23,42,.18);
-      background: rgba(255,255,255,.92);
-      color: var(--text);
-      outline:none;
-      box-shadow: 0 10px 22px rgba(2,6,23,.05);
-    }
-    input:focus, textarea:focus{
-      border-color: rgba(37,99,235,.55);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.14), 0 10px 22px rgba(2,6,23,.06);
-    }
-    .form-note{ color: var(--muted); font-size: 12.5px; margin: 10px 0 0; }
-
-    /* Footer */
-    .footer{
-      border-top: 1px solid var(--line);
-      padding-top: 28px;
-    }
-    .footer-inner{
-      display:flex;
-      gap: 18px;
-      justify-content:space-between;
-      align-items:flex-start;
-      padding-bottom: 18px;
-    }
-    .brand-foot{ display:flex; gap: 12px; align-items:center; margin-bottom: 10px; }
-    .footer-cols{ display:flex; gap: 28px; }
-    .footer h4{ margin: 0 0 10px; font-size: 14px; color: rgba(11,18,32,.92); }
-    .footer a{ display:block; color: var(--muted); padding: 4px 0; }
-    .footer a[aria-disabled="true"]{ opacity:.6; pointer-events:none; }
-    .footer-bottom{
-      border-top: 1px solid var(--line);
-      padding: 12px 0;
-      background: rgba(2,6,23,.02);
-    }
-    .muted{ color: var(--muted); }
-    .small{ font-size: 12.5px; }
-
-    /* Responsive */
-    @media (max-width: 980px){
-      .intro-inner{ grid-template-columns: 1fr; }
-      .split{ grid-template-columns: 1fr; }
-      .grid-3{ grid-template-columns: 1fr; }
-      .mini-grid{ grid-template-columns: 1fr; }
-      .contact-cards{ grid-template-columns: 1fr; }
-      .footer-inner{ flex-direction:column; }
-      .cta-bar{ flex-direction:column; align-items:flex-start; }
-      .hero-collage__grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 760px){
-      .nav-toggle{ display:block; }
-      .nav{
-        position:absolute;
-        right: 20px;
-        top: 66px;
-        flex-direction:column;
-        align-items:stretch;
-        gap: 6px;
-        padding: 10px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,.92);
-        box-shadow: var(--shadow);
-        display:none;
-        min-width: 220px;
-      }
-      .nav.open{ display:flex; }
-      .nav a{ padding: 10px 12px; }
-      .hero-collage{ min-height: auto; }
-      .hero-collage__grid{ grid-template-columns: 1fr; }
-      /* Show only the second tile (2.jpg) on small screens */
-      .hero-collage__tile{ display:none; }
-      .hero-collage__tile.tile-2{ display:block; min-height: 220px; }
-      .hero-collage__logo{ width: min(42vw, 170px); max-width: calc(100% - 32px); }
-      .hero-collage__overlay{
-        position: static;
-        max-width: none;
-        margin: 16px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <a class="skip" href="#main">Hopp til innhold</a>
@@ -555,7 +20,7 @@
         <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
         <span class="brand-text">
           <strong>Sørhaug Consulting</strong>
-          <span>Tilstandsrapporter • Vedlikeholdsplanlegging • Kirker</span>
+          <span>- Bevarer verdier. Sikrer fremtiden</span>
         </span>
       </a>
 
@@ -565,7 +30,7 @@
 
       <nav class="nav" id="nav" aria-label="Hovedmeny">
         <a href="#top">Hjem</a>
-        <a href="#tjenester">Tjenester</a>
+        <a href="tjenester.html">Tjenester</a>
         <a href="prosess.html">Prosess</a>
         <a href="kompetanse.html">Kompetanse</a>
         <a href="omoss.html">Om oss</a>
@@ -591,6 +56,21 @@
         <img src="images/Bilder nettside/72122393-09a9-45dd-919f-77e260143765.jpg" alt="" loading="eager" fetchpriority="high" />
       </figure>
     </div>
+
+    <article class="hero-collage__overlay" aria-label="Våre tjenester" id="heroOverlay">
+      <button class="hero-collage__desktop-toggle" type="button" aria-expanded="true" aria-controls="heroOverlayContent">Skjul</button>
+      <button class="hero-collage__mobile-toggle" type="button" aria-expanded="false" aria-controls="heroOverlayContent">Våre tjenester</button>
+      <div class="hero-collage__content" id="heroOverlayContent">
+        <p class="hero-collage__eyebrow">Hva vi leverer</p>
+        <h2>Tre tjenester for trygg forvaltning av kirkebygg</h2>
+        <ul class="hero-collage__list">
+          <li><strong>Tilstandsanalyse og vedlikeholdsplan:</strong> full oversikt over teknisk status, skader og langsiktige tiltak.</li>
+          <li><strong>Prosjektledelse:</strong> trygg gjennomforing innen tidsrammer og budsjett, med oppfolging av antikvariske krav.</li>
+          <li><strong>FDV-radgivning:</strong> strategisk beslutningsstotte og bistand i finansierings- og soknadsprosesser.</li>
+        </ul>
+        <a class="hero-collage__cta" href="tjenester.html">Les mer om tjenester <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
 
 
   </section>
@@ -656,34 +136,41 @@
 
         <div class="grid-3">
           <article class="card">
-            <h3>1. Tilstandsanalyse og vedlikeholdsplan</h3>
-            <p>Full oversikt over teknisk tilstand og behov for tiltak. Vi gjennomfører grundige, systematiske undersøkelser og leverer en skreddersydd 10-årig vedlikeholdsplan.</p>
+            <h3>Tilstandsanalyse og vedlikeholdsplan</h3>
+            <p>Mange kirkebygg bærer på skjulte skader og etterslep som kan bli svært kostbare om de ikke oppdages i tide. Vi gir deg en grundig, dokumentert gjennomgang av hele byggets tekniske tilstand og en langsiktig vedlikeholdsplan tilpasset ditt bygg og din økonomi.</p>
             <ul class="bullets">
-              <li>Grundig teknisk gjennomgang av eldre kirkebygg</li>
-              <li>Identifisering av skader, årsaker og risikofaktorer</li>
-              <li>Prioriterte tiltak med kostnadsanslag og tidsplassering</li>
+              <li>Grundig teknisk gjennomgang av eldre og verneverdige kirkebygg</li>
+              <li>Systematisk identifisering av skader, fuktproblematikk og konstruktive risikofaktorer</li>
+              <li>Prioritert tiltaksliste med estimerte kostnader og tidsrammer</li>
+              <li>Dokumentasjon tilpasset krav fra Riksantikvaren og regionale myndigheter</li>
             </ul>
           </article>
 
           <article class="card">
-            <h3>2. Prosjektledelse</h3>
-            <p>Vi styrer komplekse restaurerings- og vedlikeholdsprosjekter trygt innen tids- og kostnadsrammer, med særskilt fokus på antikvariske krav.</p>
+            <h3>Prosjektledelse</h3>
+            <p>Restaureringsprosjekter på kirker og bevaringsverdige bygg er teknisk komplekse og stiller særskilte krav til antikvarisk fagkunnskap. Vi tar det totale prosjektlederansvaret – fra planlegging og anbudsutlysning til ferdigstillelse og sluttdokumentasjon.</p>
             <ul class="bullets">
-              <li>Spesialisert ledelse av restaureringsprosjekter</li>
-              <li>Oppfølging av antikvariske krav og håndverkere</li>
-              <li>Koordinering, kvalitetssikring og fremdriftsstyring</li>
+              <li>Spesialisert ledelse av restaurerings- og rehabiliteringsprosjekter</li>
+              <li>Koordinering av håndverkere, spesialister og antikvariske fagmiljøer</li>
+              <li>Styring av fremdrift, økonomi og kvalitet gjennom hele prosjektløpet</li>
+              <li>Sluttrapportering og overlevering med fullstendig prosjektdokumentasjon</li>
             </ul>
           </article>
 
           <article class="card">
-            <h3>3. FDV-rådgivning</h3>
-            <p>Rådgivning innen Forvaltning, Drift og Vedlikehold for fellesråd og eiere – inkludert støtte i finansieringsprosesser.</p>
+            <h3>FDV-rådgivning</h3>
+            <p>God forvaltning handler om å etablere systemer og rutiner som sikrer at verdiene bevares over tid og at tilgjengelige midler utnyttes best mulig. Vi bistår fellesråd og kirkebyggeiere med strategisk FDV-rådgivning tilpasset den virkeligheten kirken opererer i.</p>
             <ul class="bullets">
-              <li>Strategisk FDV-rådgivning og beslutningsstøtte</li>
-              <li>Bistand med søknader til statlig og regional finansiering</li>
-              <li>Langsiktig forvaltning av kulturminneverdier</li>
+              <li>Strategisk rådgivning innen Forvaltning, Drift og Vedlikehold av kirkebygg</li>
+              <li>Utarbeidelse og kvalitetssikring av FDV-planer og driftsbudsjetter</li>
+              <li>Bistand med søknadsprosesser for statlig og regional finansiering</li>
+              <li>Beslutningsstøtte for kirkebyggeiere og fellesråd i krevende prosesser</li>
             </ul>
           </article>
+        </div>
+
+        <div class="hero-cta">
+          <a class="btn" href="tjenester.html">Se alle tjenester</a>
         </div>
       </div>
     </section>
@@ -698,23 +185,18 @@
           <div class="contact-cards">
             <div class="contact-card">
               <h3>E-post</h3>
-              <p><a href="mailto:post@sorhaugconsulting.no">post@sorhaugconsulting.no</a></p>
-              <small>Bytt til din faktiske e-post.</small>
+              <p><a href="mailto:torgeir@sorhaugconsulting.no">torgeir@sorhaugconsulting.no</a></p>
+              <small>Send oss en epost.</small>
             </div>
             <div class="contact-card">
               <h3>Telefon</h3>
-              <p><a href="tel:+4700000000">+47 00 00 00 00</a></p>
-              <small>Bytt til ditt faktiske nummer.</small>
-            </div>
-            <div class="contact-card">
-              <h3>Lokasjon</h3>
-              <p>Norge (landsdekkende)</p>
-              <small>Befaring etter avtale.</small>
+              <p><a href="tel:+4740849765"> 408 497 65</a></p>
+              <small>Ring for en god samtale.</small>
             </div>
           </div>
         </div>
 
-        <form class="form card" id="contactForm">
+        <form class="form card" id="contactForm" action="https://formspree.io/f/mojbaanq" method="POST">
           <h3>Be om tilbud</h3>
           <label>
             Navn
@@ -733,8 +215,9 @@
             <textarea name="message" rows="5" required></textarea>
           </label>
           <button class="btn" type="submit">Send forespørsel</button>
+          <p id="formStatus" style="margin-top:10px;font-size:14px;color:var(--accent3);display:none;">Takk! Vi tar kontakt snart.</p>
           <p class="form-note">
-            Skjemaet åpner e-postklient (mailto) – ingen data lagres på nettsiden.
+            Meldingen sendes direkte til oss – ingen data lagres på nettsiden.
           </p>
         </form>
       </div>
@@ -743,33 +226,38 @@
 
   <footer class="footer">
     <div class="container footer-inner">
-      <div>
-        <div class="brand-foot">
-          <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting logo" aria-hidden="true" />
-          <div>
-            <strong>Sørhaug Consulting</strong>
-            <div class="muted">Tilstandsrapporter og vedlikeholdsplanlegging for kirker</div>
-          </div>
-        </div>
-        <p class="muted small">
-          Bildekilde: lokale prosjektfoto fra mappen images/Bilder nettside/. Du kan enkelt bytte rekkefølge eller motiv i HTML.
+      <section class="footer-block">
+        <h3>Om Sørhaug Consulting</h3>
+        <p>
+          Sørhaug Consulting bistår kirkelige fellesråd og eiere av bevaringsverdige bygg med
+          teknisk tilstandsvurdering, vedlikeholdsplanlegging og trygg prosjektgjennomføring.
         </p>
-      </div>
+        <a href="tjenester.html">Tjenester</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="kompetanse.html">Kompetanse</a>
+        <a href="leveranser.html">Leveranser</a>
+      </section>
 
-      <div class="footer-cols">
-        <div>
-          <h4>Snarveier</h4>
-          <a href="#tjenester">Tjenester</a>
-          <a href="prosess.html">Prosess</a>
-          <a href="leveranser.html">Leveranser</a>
-          <a href="#kontakt">Kontakt</a>
-        </div>
-        <div>
-          <h4>Juridisk</h4>
-          <a href="#" aria-disabled="true">Personvern (legg til)</a>
-          <a href="#" aria-disabled="true">Informasjonskapsler (legg til)</a>
-        </div>
-      </div>
+      <section class="footer-block">
+        <h3>Kontakt oss</h3>
+        <p>
+          Sørhaug Consulting<br />
+          Norge
+        </p>
+        <a href="tel:+4740849765">+47 408 49 765</a>
+        <a href="mailto:torgeir@sorhaugconsulting.no">Kontakt</a>
+      </section>
+
+      <section class="footer-block">
+        <h3>Om selskapet</h3>
+        <p>
+          Vi kombinerer byggteknisk kompetanse, antikvarisk forståelse og dokumentert metodikk
+          for å gi et trygt beslutningsgrunnlag for prioritering av tiltak.
+        </p>
+        <a href="omoss.html">Om oss</a>
+        <a href="personvern.html">Personvern</a>
+        <a href="informasjonskapsler.html">Informasjonskapsler</a>
+      </section>
     </div>
     <div class="footer-bottom">
       <div class="container small muted">© <span id="year"></span> Sørhaug Consulting. Alle rettigheter reservert.</div>
@@ -813,24 +301,82 @@
         }
       }
 
-      // Kontakt-skjema -> mailto (ingen backend)
+      // Logo/motto-lenke: hopp direkte til toppen uten underline-hover
+      const brandTopLink = document.querySelector('.brand[href="#top"]');
+      if (brandTopLink) {
+        brandTopLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'auto' });
+          if (nav && toggle && nav.classList.contains('open')) {
+            nav.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      // Mobil-popup i hero: liten boks som kan utvides
+      const heroOverlay = document.getElementById("heroOverlay");
+      const heroOverlayToggle = heroOverlay ? heroOverlay.querySelector(".hero-collage__mobile-toggle") : null;
+      const heroOverlayDesktopToggle = heroOverlay ? heroOverlay.querySelector(".hero-collage__desktop-toggle") : null;
+      if (heroOverlay && heroOverlayToggle && heroOverlayDesktopToggle) {
+        const syncHeroOverlayState = () => {
+          const mobileView = window.matchMedia("(max-width: 760px)").matches;
+          if (mobileView) {
+            heroOverlay.classList.remove("is-collapsed");
+            heroOverlay.classList.remove("is-open");
+            heroOverlayToggle.setAttribute("aria-expanded", "false");
+            heroOverlayDesktopToggle.setAttribute("aria-expanded", "true");
+            heroOverlayDesktopToggle.textContent = "Skjul";
+          } else {
+            heroOverlay.classList.remove("is-open");
+            heroOverlayToggle.setAttribute("aria-expanded", "false");
+          }
+        };
+
+        heroOverlayToggle.addEventListener("click", () => {
+          const open = heroOverlay.classList.toggle("is-open");
+          heroOverlayToggle.setAttribute("aria-expanded", String(open));
+        });
+
+        heroOverlayDesktopToggle.addEventListener("click", () => {
+          const collapsed = heroOverlay.classList.toggle("is-collapsed");
+          heroOverlayDesktopToggle.setAttribute("aria-expanded", String(!collapsed));
+          heroOverlayDesktopToggle.textContent = collapsed ? "Vis tjenester" : "Skjul";
+        });
+
+        window.addEventListener("resize", syncHeroOverlayState);
+        syncHeroOverlayState();
+      }
+
+      // Kontakt-skjema -> Formspree
       const form = document.getElementById("contactForm");
       if (form) {
-        form.addEventListener("submit", (e) => {
+        form.addEventListener("submit", async (e) => {
           e.preventDefault();
-          const fd = new FormData(form);
-          const name = (fd.get("name") || "").toString().trim();
-          const email = (fd.get("email") || "").toString().trim();
-          const location = (fd.get("location") || "").toString().trim();
-          const message = (fd.get("message") || "").toString().trim();
-
-          const subject = encodeURIComponent("Forespørsel – Tilstandsrapport / vedlikeholdsplan");
-          const body = encodeURIComponent(
-            `Navn: ${name}\nE-post: ${email}\nKommune / sted: ${location}\n\nBeskrivelse:\n${message}\n`
-          );
-
-          // Bytt e-post til deres ekte mottaksadresse
-          window.location.href = `mailto:post@sorhaugconsulting.no?subject=${subject}&body=${body}`;
+          const btn = form.querySelector("button[type='submit']");
+          const status = document.getElementById("formStatus");
+          btn.disabled = true;
+          btn.textContent = "Sender…";
+          try {
+            const res = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: { Accept: "application/json" }
+            });
+            if (res.ok) {
+              form.reset();
+              status.style.display = "block";
+              btn.textContent = "Sendt!";
+            } else {
+              btn.disabled = false;
+              btn.textContent = "Send forespørsel";
+              alert("Noe gikk galt. Prøv igjen eller kontakt oss direkte.");
+            }
+          } catch {
+            btn.disabled = false;
+            btn.textContent = "Send forespørsel";
+            alert("Noe gikk galt. Sjekk internettilkoblingen og prøv igjen.");
+          }
         });
       }
     })();
