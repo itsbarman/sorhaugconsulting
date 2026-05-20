@@ -1,0 +1,12 @@
+Options -MultiViews
+RewriteEngine On
+
+# Omdiriger /side.html → /side (fjern .html fra URL)
+RewriteCond %{THE_REQUEST} \s/([^.]+)\.html[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L,NE]
+
+# Tjen side.html internt når noen besøker /side
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^([^/]+)/?$ $1.html [L]
