@@ -173,8 +173,8 @@ a:hover{ text-decoration:underline; }
   bottom: clamp(20px, 3vw, 36px);
   overflow: hidden;
   z-index: 2;
-  width: min(460px, calc(100% - 40px));
-  padding: 18px 20px;
+  width: min(414px, calc(100% - 40px));
+  padding: 16px 18px;
   border-radius: 0;
   border: 1px solid rgba(15,23,42,.08);
   background: rgba(255,255,255,.95);
@@ -711,8 +711,8 @@ input:focus, textarea:focus{
   .hero-collage__content{
     display:none;
     margin-top: 8px;
-    width: min(320px, calc(100vw - 24px));
-    padding: 12px;
+    width: min(288px, calc(100vw - 24px));
+    padding: 11px;
     border: 1px solid rgba(15,23,42,.10);
     background: rgba(255,255,255,.95);
     box-shadow: 0 14px 30px rgba(2,6,23,.20);

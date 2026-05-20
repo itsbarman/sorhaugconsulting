@@ -132,6 +132,17 @@
 
     .split{ display:grid; grid-template-columns: 1.1fr .9fr; gap: 22px; align-items:start; }
     .lead-sm{ color: rgba(11,18,32,.86); font-size: 17px; margin-top: 6px; }
+    .about-layout{ display:grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items:start; }
+    .about-intro{ padding: 24px; }
+    .about-intro h1{ margin: 6px 0 12px; font-size: clamp(30px, 3.6vw, 44px); line-height:1.12; letter-spacing:-.2px; }
+    .about-intro .about-lead{ margin:0 0 12px; color: rgba(11,18,32,.92); font-size:18px; line-height:1.55; }
+    .about-intro p{ margin:0 0 12px; color: var(--muted); }
+    .about-points{ margin:12px 0 0; padding-left:18px; color: rgba(11,18,32,.88); }
+    .about-points li{ margin:6px 0; }
+    .about-highlights{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; margin-top:16px; }
+    .highlight{ border:1px solid var(--line); border-radius:12px; background: rgba(255,255,255,.78); padding:10px 10px 9px; }
+    .highlight strong{ display:block; font-size:13px; color: var(--text); margin-bottom:2px; }
+    .highlight span{ color: var(--muted); font-size:12px; }
     .about-figure{
       margin: 0 0 18px;
       overflow:hidden;
@@ -146,6 +157,8 @@
     .bio-card{ padding: 16px; }
     .bio-card h3{ margin:0 0 8px; font-size: 18px; }
     .bio-card .role{ color: var(--accent2); font-weight: 800; font-size: 13px; letter-spacing: .02em; margin-bottom: 8px; }
+    .bio-card p{ margin: 0 0 10px; color: rgba(11,18,32,.88); }
+    .bio-card p:last-child{ margin-bottom:0; }
     .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin: 14px 0 16px; }
     .pill{ padding: 7px 10px; border-radius: 999px; border: 1px solid rgba(37,99,235,.18); background: rgba(37,99,235,.06); color: rgba(11,18,32,.86); font-weight:800; font-size:13px; }
     .mini-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -165,6 +178,8 @@
 
     @media (max-width: 980px){
       .split{ grid-template-columns:1fr; }
+      .about-layout{ grid-template-columns:1fr; }
+      .about-highlights{ grid-template-columns:1fr; }
       .mini-grid{ grid-template-columns:1fr; }
       .footer-inner{ flex-direction:column; }
     }
@@ -226,14 +241,23 @@
 
   <main id="main">
     <section class="section">
-      <div class="container split">
-        <div>
-          <div class="section-head">
-            <div class="eyebrow">Om Sørhaug Consulting AS</div>
-            <h1>Om oss</h1>
-            <p>Sørhaug Consulting AS drives av Torgeir og Bodil Sørhaug. Vi kombinerer faglig presisjon, administrativ struktur og et tydelig bevaringsperspektiv i arbeidet med kirker og bygg.</p>
+      <div class="container about-layout">
+        <section class="card about-intro" aria-label="Om selskapet">
+          <div class="eyebrow">Om Sørhaug Consulting AS</div>
+          <h1>Om oss</h1>
+          <p class="about-lead">Sørhaug Consulting AS drives av Torgeir og Bodil Sørhaug. Vi kombinerer teknisk fagstyrke, tydelig prosjektstruktur og praktisk gjennomføringsevne for kirkelige fellesråd og eiere av kirkebygg.</p>
+          <p>Arbeidsmetodikken vår er basert på etterprøvbar dokumentasjon, realistiske prioriteringer og tett oppfølging gjennom hele oppdraget. Målet er alltid å gi oppdragsgiver et trygt beslutningsgrunnlag og en gjennomførbar plan.</p>
+          <div class="about-highlights" aria-label="Kjerneområder">
+            <div class="highlight"><strong>Tilstand</strong><span>Strukturert analyse og vurdering</span></div>
+            <div class="highlight"><strong>Plan</strong><span>Prioriterte tiltak og vedlikehold</span></div>
+            <div class="highlight"><strong>Gjennomføring</strong><span>Tydelig ledelse fra start til slutt</span></div>
           </div>
-        </div>
+          <ul class="about-points">
+            <li>Faglig dokumentasjon som fungerer i saksbehandling og budsjettarbeid</li>
+            <li>Praktisk koordinering med fokus på kvalitet, fremdrift og økonomi</li>
+            <li>Ryddig kommunikasjon med oppdragsgiver gjennom hele prosessen</li>
+          </ul>
+        </section>
 
         <aside class="hero-card" aria-label="Team">
           <figure class="about-figure">
@@ -244,16 +268,14 @@
             <div class="card bio-card">
               <div class="role">Rådgivende ingeniør</div>
               <h3>Torgeir Sørhaug</h3>
-              <p>Torgeir kombinerer teknisk ingeniørkompetanse med dyp forståelse for historisk bygningsvern. Han er utdannet drifts- og vedlikeholdsingeniør og har etterutdanning i restaurering av kirkebygg.</p>
-              <p>Gjennom bakgrunn som kirkeverge og prosjektleder for kirkebyggrestaurering har han utviklet bred innsikt i kravene som følger forvaltning av nasjonal kulturarv. Han har også omfattende erfaring med husbygging i historisk område, der balansen mellom antikvariske krav og moderne funksjonalitet er sentral.</p>
-              <p>Erfaring fra offshore-bransjen har gitt ham en metodisk tilnærming til prosjektering og tilstandsanalyse, med sterk vekt på teknisk nøyaktighet, dokumentasjon og systematiske vedlikeholdsrutiner.</p>
+              <p>Torgeir kombinerer ingeniørfaglig bakgrunn med solid erfaring fra forvaltning og restaureringsprosjekter på kirkebygg.</p>
+              <p>Han arbeider metodisk med prosjektering, tilstandsanalyse og prioritering av tiltak, med sterk vekt på teknisk kvalitet og tydelig dokumentasjon.</p>
             </div>
             <div class="card bio-card">
               <div class="role">Administrativ leder</div>
               <h3>Bodil Sørhaug</h3>
-              <p>Bodil har det overordnede ansvaret for firmaets drift og administrasjon. Hun har pedagogisk utdanning med fordypning i administrasjon og ledelse.</p>
-              <p>Med sin bakgrunn sikrer hun ryddige prosesser og god struktur i alle oppdrag. Bodil har en særlig interesse for arkitektur og har opparbeidet seg praktisk erfaring gjennom byggeprosjekter, også i historisk område.</p>
-              <p>Hennes kombinasjon av lederkompetanse og forståelse for fagfeltet sørger for profesjonell oppfølging av både kunder og prosjekter.</p>
+              <p>Bodil har overordnet ansvar for drift og administrasjon, og sikrer god struktur i alle leveranser.</p>
+              <p>Hun bidrar med tydelig prosjektstotte, koordinering og profesjonell kundeoppfolging gjennom hele oppdraget.</p>
             </div>
           </div>
         </aside>
