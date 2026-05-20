@@ -7,6 +7,42 @@
   <meta name="description" content="Referanser fra Sørhaug Consulting AS. Prosjektledelse og vedlikeholdsetapper ved Skaun middelalderkirke." />
   <meta name="theme-color" content="#0B4F6C" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .refs-wrap{max-width:1120px;}
+    .refs-hero{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:28px;
+      background:linear-gradient(135deg, rgba(15,63,151,.06), rgba(15,118,110,.05) 55%, rgba(180,83,9,.05));
+      box-shadow:0 16px 38px rgba(2,6,23,.08);
+      margin-bottom:18px;
+    }
+    .refs-kicker{margin:0 0 6px;color:#0f3f97;font-weight:800;letter-spacing:.04em;font-size:12px;text-transform:uppercase;}
+    .refs-hero h1{margin:0 0 8px;font-size:clamp(30px,3.5vw,44px);line-height:1.12;letter-spacing:-.2px;}
+    .refs-hero p{margin:0;max-width:70ch;color:rgba(11,18,32,.88);font-size:17px;}
+    .refs-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 26px;}
+    .refs-stat{border:1px solid var(--line);background:rgba(255,255,255,.82);border-radius:14px;padding:12px 12px 11px;}
+    .refs-stat strong{display:block;font-size:22px;line-height:1;color:var(--text);margin-bottom:4px;}
+    .refs-stat span{font-size:13px;color:var(--muted);}
+    .refs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+    .ref-card{padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,249,252,.88));box-shadow:0 16px 34px rgba(2,6,23,.08);}
+    .ref-year{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(15,63,151,.25);background:rgba(15,63,151,.08);color:#0f3f97;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;margin-bottom:10px;}
+    .ref-card h2{margin:0 0 8px;font-size:24px;line-height:1.2;letter-spacing:-.2px;}
+    .ref-card p{margin:0 0 12px;color:rgba(11,18,32,.88);}
+    .ref-meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;padding:0;list-style:none;}
+    .ref-meta li{padding:6px 10px;border-radius:999px;border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.8);font-size:12px;color:rgba(11,18,32,.86);font-weight:700;}
+    .ref-media{margin:0;overflow:hidden;border-radius:14px;border:1px solid var(--line);background:#ffffff;}
+    .ref-media img{width:100%;height:260px;object-fit:cover;display:block;}
+    .ref-media figcaption{padding:9px 12px 10px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);}
+    .ref-card.ref-featured{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+    .ref-card.ref-featured .ref-media img{height:100%;min-height:330px;}
+    @media (max-width:980px){
+      .refs-stats{grid-template-columns:1fr;}
+      .refs-grid{grid-template-columns:1fr;}
+      .ref-card.ref-featured{grid-template-columns:1fr;}
+      .ref-card.ref-featured .ref-media img{min-height:240px;}
+    }
+  </style>
 </head>
 <body>
   <a class="skip" href="#main">Hopp til innhold</a>
@@ -39,53 +75,65 @@
 
   <main id="main">
     <section class="section">
-      <div class="container" style="max-width:920px;">
-        <div class="section-head" style="margin-bottom:26px;">
+      <div class="container refs-wrap">
+        <header class="refs-hero" aria-label="Innledning referanser">
+          <p class="refs-kicker">Utvalgte Prosjekter</p>
           <h1>Referanser</h1>
-          <p>Et utvalg oppdrag utført med fokus på antikvariske krav, kvalitet i gjennomforing og langsiktig bevaring.</p>
+          <p>Et representativt utvalg prosjekter der Sørhaug Consulting AS har bidratt med teknisk ledelse, prosjektstyring og gjennomforing med høy krav til kvalitet og dokumentasjon.</p>
+        </header>
+
+        <div class="refs-stats" aria-label="Nokkeltall">
+          <div class="refs-stat"><strong>3</strong><span>Viste referanseprosjekter</span></div>
+          <div class="refs-stat"><strong>2017-2022</strong><span>Dokumentert prosjektperiode</span></div>
+          <div class="refs-stat"><strong>100%</strong><span>Fokus pa kvalitet og leveranse</span></div>
         </div>
 
-        <article class="card" style="padding:28px;">
-          <h2 style="margin:0 0 10px;">Referanse: Skaun middelalderkirke</h2>
-          <p style="margin:0 0 18px;color:rgba(11,18,32,.9);">
-            Sørhaug har hatt ansvaret for prosjektledelsen ved to større vedlikeholdsetapper på Skaun middelalderkirke.
-            Arbeidet er utført i tråd med antikvariske retningslinjer for bygg.
-          </p>
+        <div class="refs-grid">
+          <article class="ref-card ref-featured">
+            <div>
+              <div class="ref-year">2022</div>
+              <h2>Utskifting av taktekking</h2>
+              <ul class="ref-meta">
+                <li>Skaun middelalderkirke</li>
+                <li>Total prosjektledelse</li>
+                <li>Kvalitet i utførelse</li>
+              </ul>
+              <p>Total prosjektledelse for utskifting av kirkens skifertak. Arbeidet inkluderte planlegging, anskaffelser og tett oppfølging av utførende ledd for å sikre korrekt materialbruk og kvalitet i alle detaljer. Prosjektet ble gjennomført med tydelig fremdriftsstyring, løpende kvalitetssikring og strukturert dialog mellom oppdragsgiver, håndverkere og øvrige fagressurser. Dette ga en trygg gjennomføring med god kontroll på både tekniske løsninger, dokumentasjon og sluttresultat.</p>
+            </div>
+            <figure class="ref-media">
+              <img src="images/Bilder nettside/9c0b2374-6713-4457-b4f5-a1815983a669.jpg" alt="Skaun middelalderkirke med stillas i forbindelse med takarbeid" loading="lazy" />
+              <figcaption>Skaun middelalderkirke under takarbeid.</figcaption>
+            </figure>
+          </article>
 
-          <div style="display:grid;gap:14px;">
-            <section class="mini" style="padding:16px;">
-              <h3 style="margin:0 0 6px;">2020: Utbedring av tårn og spir</h3>
-              <p style="margin:0;color:rgba(11,18,32,.88);">
-                Prosjektledelse for utbedring av råteskader i tårnkonstruksjon og spir. Oppdraget omfattet koordinering
-                av fagressurser, oppfølging av teknisk utførelse og sikring av fremdrift i henhold til godkjent tiltaksplan.
-              </p>
-              <figure style="margin:12px 0 0;overflow:hidden;border-radius:12px;border:1px solid var(--line);">
-                <img src="images/Bilder nettside/a0f05d54-1cc5-4c29-bee9-d14b72884a96.jpg" alt="Skaun middelalderkirke under arbeid på tårn og spir" loading="lazy" style="width:100%;height:260px;object-fit:cover;display:block;" />
-              </figure>
-            </section>
+          <article class="ref-card">
+            <div class="ref-year">2020</div>
+            <h2>Utbedring av tårn og spir</h2>
+            <ul class="ref-meta">
+              <li>Skaun middelalderkirke</li>
+              <li>Koordinering av fagressurser</li>
+            </ul>
+            <p>Prosjektledelse for utbedring av råteskader i tårnkonstruksjon og spir. Oppdraget omfattet koordinering av fagressurser, oppfølging av teknisk utførelse og sikring av fremdrift i henhold til godkjent tiltaksplan.</p>
+            <figure class="ref-media">
+              <img src="images/Bilder nettside/a0f05d54-1cc5-4c29-bee9-d14b72884a96.jpg" alt="Skaun middelalderkirke under arbeid på tårn og spir" loading="lazy" />
+              <figcaption>Utbedring av tårn og spir.</figcaption>
+            </figure>
+          </article>
 
-            <section class="mini" style="padding:16px;">
-              <h3 style="margin:0 0 6px;">2022: Utskifting av taktekking</h3>
-              <p style="margin:0;color:rgba(11,18,32,.88);">
-                Total prosjektledelse for utskifting av kirkens skifertak. Arbeidet inkluderte planlegging, anskaffelser og
-                tett oppfølging av utførende ledd for å sikre korrekt materialbruk og kvalitet i alle detaljer.
-              </p>
-              <figure style="margin:12px 0 0;overflow:hidden;border-radius:12px;border:1px solid var(--line);">
-                <img src="images/Bilder nettside/9c0b2374-6713-4457-b4f5-a1815983a669.jpg" alt="Skaun middelalderkirke med stillas i forbindelse med takarbeid" loading="lazy" style="width:100%;height:260px;object-fit:cover;display:block;" />
-              </figure>
-            </section>
-
-            <section class="mini" style="padding:16px;">
-              <h3 style="margin:0 0 6px;">2017: Nybygg i kulturmiljø</h3>
-              <p style="margin:0;color:rgba(11,18,32,.88);">
-                Totalprosjektering og oppføring av enebolig i samarbeid med det lokale byggefirmaet Dafro AS, på historiske Børsøra. Prosjektet forente strenge antikvariske vernebestemmelser i et 1700-tallsmiljø med moderne krav til energieffektivitet. Jeg hadde det fulle prosjekteringsansvaret, som innebar en arkitektonisk tilpasning til den tradisjonelle strandsitterbebyggelsen, samtidig som boligen ble teknisk utført for lavt energiforbruk og bærekraftig drift.
-              </p>
-              <figure style="margin:12px 0 0;overflow:hidden;border-radius:12px;border:1px solid var(--line);">
-                <img src="images/Bilder nettside/IMG_7423.jpeg" alt="Enebolig oppført i kulturmiljø på Børsøra" loading="lazy" style="width:100%;height:260px;object-fit:cover;display:block;" />
-              </figure>
-            </section>
-          </div>
-        </article>
+          <article class="ref-card">
+            <div class="ref-year">2017</div>
+            <h2>Nybygg i kulturmiljø</h2>
+            <ul class="ref-meta">
+              <li>Børsøra, Skaun</li>
+              <li>Totalprosjektering</li>
+            </ul>
+            <p>Totalprosjektering og oppføring av enebolig i samarbeid med det lokale byggefirmaet Dafro AS, på historiske Børsøra. Prosjektet kombinerte tradisjonelle miljøkrav med moderne krav til energieffektivitet og bærekraftig drift.</p>
+            <figure class="ref-media">
+              <img src="images/Bilder nettside/IMG_7423.jpeg" alt="Enebolig oppført i kulturmiljø på Børsøra" loading="lazy" />
+              <figcaption>Boligprosjekt i historisk miljø på Børsøra.</figcaption>
+            </figure>
+          </article>
+        </div>
       </div>
     </section>
   </main>
