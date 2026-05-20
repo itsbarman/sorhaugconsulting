@@ -569,7 +569,9 @@ h1{
 }
 .contact-profile img{
   width: 100%;
-  height: auto;
+  height: clamp(260px, 34vw, 380px);
+  object-fit: cover;
+  object-position: 35% 18%;
   display: block;
 }
 .contact-profile figcaption{
