@@ -336,7 +336,7 @@ a:hover{ text-decoration:underline; }
 .btn-small{ padding: 10px 12px; border-radius: 11px; font-size: 14px; }
 
 /* Intro */
-.intro{ padding-top: 84px; }
+.intro{ padding-top: 44px; }
 .intro-inner{
   display:grid;
   grid-template-columns: 1.35fr .85fr;
@@ -659,6 +659,7 @@ input:focus, textarea:focus{
   .hero-collage__grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px){
+  .intro{ padding-top: 28px; }
   .nav-toggle{ display:block; }
   .nav{
     position:absolute;
