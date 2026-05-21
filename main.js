@@ -19,31 +19,6 @@
       });
     });
 
-    // Hjem-lenke (index.html): hopp direkte til toppen uten smooth-scroll
-    const homeLink = nav.querySelector('a[href="#top"]');
-    if (homeLink) {
-      homeLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'auto' });
-        if (nav.classList.contains('open')) {
-          nav.classList.remove('open');
-          toggle.setAttribute('aria-expanded', 'false');
-        }
-      });
-    }
-  }
-
-  // Logo/brand-lenke (index.html): hopp til toppen
-  const brandTopLink = document.querySelector('.brand[href="#top"]');
-  if (brandTopLink) {
-    brandTopLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'auto' });
-      if (nav && toggle && nav.classList.contains('open')) {
-        nav.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-      }
-    });
   }
 
   // Hero-overlay (kun index.html)
