@@ -53,12 +53,18 @@
     const heroOverlayDesktopToggle = heroOverlay.querySelector('.hero-collage__desktop-toggle');
 
     if (heroOverlayToggle && heroOverlayDesktopToggle) {
+      let lastMobileView = null;
+
       const syncHeroOverlayState = () => {
         const mobileView = window.matchMedia('(max-width: 760px)').matches;
+
+        // Mobile browsers can fire resize while scrolling; only reset on breakpoint changes.
+        if (lastMobileView === mobileView) return;
+        lastMobileView = mobileView;
+
         if (mobileView) {
           heroOverlay.classList.remove('is-collapsed');
-          heroOverlay.classList.remove('is-open');
-          heroOverlayToggle.setAttribute('aria-expanded', 'false');
+          heroOverlayToggle.setAttribute('aria-expanded', String(heroOverlay.classList.contains('is-open')));
           heroOverlayDesktopToggle.setAttribute('aria-expanded', 'true');
           heroOverlayDesktopToggle.textContent = 'Skjul';
         } else {
