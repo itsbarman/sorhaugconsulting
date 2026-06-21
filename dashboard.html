@@ -9,6 +9,35 @@
   <link rel="stylesheet" href="css/auth.css" />
 </head>
 <body>
+  <a class="skip" href="#main">Hopp til innhold</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="Sørhaug Consulting AS - hjem">
+        <img src="images/logo.png" class="brand-mark" alt="Sørhaug Consulting AS logo" aria-hidden="true" />
+        <span class="brand-text">
+          <strong>Sørhaug Consulting AS</strong>
+          <span>- Bevarer verdier. Sikrer fremtiden</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" aria-label="Apne meny" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="nav" aria-label="Hovedmeny">
+        <a href="index.html">Hjem</a>
+        <a href="tjenester.html">Tjenester</a>
+        <a href="prosess.html">Prosess</a>
+        <a href="omoss.html">Om oss</a>
+        <a href="leveranser.html">Leveranser</a>
+        <a href="referanser.html">Referanser</a>
+        <a href="dashboard.html">Portal</a>
+        <a href="index.html#kontakt" class="btn btn-small">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
   <main class="dashboard-page" id="main">
     <header class="dashboard-header">
       <div>
@@ -93,6 +122,7 @@
     </section>
   </main>
 
+  <script src="main.js" defer></script>
   <script src="auth.js" defer></script>
 </body>
 </html>
