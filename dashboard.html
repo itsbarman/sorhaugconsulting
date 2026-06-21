@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Sørhaug Consulting AS</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <main class="dashboard-page" id="main">
+    <header class="dashboard-header">
+      <div>
+        <h1>Prosjektdashboard</h1>
+        <p id="userInfo">Laster bruker...</p>
+      </div>
+      <button id="logoutButton" class="btn btn-small" type="button">Logg ut</button>
+    </header>
+
+    <section class="dashboard-grid" aria-label="Prosjekter og filer">
+      <article class="panel">
+        <h2>Dine prosjekter</h2>
+        <ul id="projectList" class="project-list"></ul>
+      </article>
+
+      <article class="panel">
+        <h2>Ressurser</h2>
+        <p id="assetHint">Velg et prosjekt for å se rapporter og bilder.</p>
+        <ul id="assetList" class="asset-list"></ul>
+      </article>
+    </section>
+
+    <section id="adminPanel" class="admin-panel" hidden aria-label="Adminverktøy">
+      <h2>Adminverktøy</h2>
+      <p class="admin-intro">Opprett brukere/prosjekter, tildel brukere og last opp prosjektfiler.</p>
+
+      <div class="admin-grid">
+        <article class="panel">
+          <h3>Ny bruker</h3>
+          <form id="createUserForm" class="admin-form" novalidate>
+            <input name="name" placeholder="Navn" required />
+            <input name="email" type="email" placeholder="E-post" required />
+            <input name="password" type="password" placeholder="Passord (min 12 tegn)" minlength="12" required />
+            <select name="role">
+              <option value="client">Kunde</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button class="btn btn-small" type="submit">Opprett bruker</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Nytt prosjekt</h3>
+          <form id="createProjectForm" class="admin-form" novalidate>
+            <input name="name" placeholder="Prosjektnavn" required />
+            <textarea name="description" placeholder="Beskrivelse"></textarea>
+            <input name="memberEmails" placeholder="Medlemmer (kommaseparerte e-poster)" />
+            <button class="btn btn-small" type="submit">Opprett prosjekt</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Legg til medlem i prosjekt</h3>
+          <form id="addMemberForm" class="admin-form" novalidate>
+            <select name="projectId" id="adminProjectSelect" required></select>
+            <input name="email" type="email" placeholder="Brukerens e-post" required />
+            <button class="btn btn-small" type="submit">Legg til medlem</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Last opp fil</h3>
+          <form id="uploadAssetForm" class="admin-form" novalidate>
+            <select name="projectId" id="assetProjectSelect" required></select>
+            <input name="title" placeholder="Tittel" required />
+            <input name="kind" placeholder="Type (rapport/bilde)" value="rapport" required />
+            <input name="file" type="file" required />
+            <button class="btn btn-small" type="submit">Last opp fil</button>
+          </form>
+        </article>
+      </div>
+
+      <p id="adminMessage" class="auth-message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="auth.js" defer></script>
+</body>
+</html>

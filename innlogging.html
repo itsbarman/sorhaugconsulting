@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Innlogging | Sørhaug Consulting AS</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <main class="auth-page" id="main">
+    <section class="auth-card" aria-label="Innlogging">
+      <div class="auth-brand">
+        <img src="images/logo.png" alt="Sørhaug Consulting AS logo" />
+        <div>
+          <h1>Prosjektportal</h1>
+          <p>Logg inn for å se prosjekter, rapporter og bilder.</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="auth-form" novalidate>
+        <label for="email">E-post</label>
+        <input id="email" name="email" type="email" autocomplete="username" required />
+
+        <label for="password">Passord</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" minlength="12" required />
+
+        <button type="submit" class="btn auth-submit">Logg inn</button>
+        <p id="loginMessage" class="auth-message" aria-live="polite"></p>
+      </form>
+
+      <div class="auth-divider" aria-hidden="true"><span>eller</span></div>
+
+      <form id="registerForm" class="auth-form" novalidate>
+        <label for="registerName">Navn</label>
+        <input id="registerName" name="name" type="text" autocomplete="name" required />
+
+        <label for="registerEmail">E-post</label>
+        <input id="registerEmail" name="email" type="email" autocomplete="email" required />
+
+        <label for="registerPassword">Passord</label>
+        <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="12" required />
+
+        <button type="submit" class="btn auth-submit auth-register">Registrer ny bruker</button>
+        <p id="registerMessage" class="auth-message" aria-live="polite"></p>
+      </form>
+
+      <p class="auth-note">
+        Sikkerhet: Sesjon lagres i HttpOnly-cookie. Ingen passord lagres i nettleserens localStorage.
+      </p>
+    </section>
+  </main>
+
+  <script src="auth.js" defer></script>
+</body>
+</html>

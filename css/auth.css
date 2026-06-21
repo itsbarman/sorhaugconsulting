@@ -1,0 +1,229 @@
+body {
+  min-height: 100vh;
+}
+
+.auth-page,
+.dashboard-page {
+  width: min(1100px, calc(100% - 2rem));
+  margin: 3rem auto;
+}
+
+.auth-card {
+  width: min(500px, 100%);
+  margin: 3rem auto;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.1);
+  border-radius: 18px;
+  padding: 1.5rem;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-brand img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.auth-brand h1 {
+  margin: 0;
+}
+
+.auth-brand p {
+  margin: 0.25rem 0 0;
+  color: #4b5563;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.auth-divider {
+  margin: 1.25rem 0 0.5rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+  text-align: center;
+}
+
+.auth-divider span {
+  display: inline-block;
+  margin-top: -0.7rem;
+  padding: 0 0.55rem;
+  background: rgba(255, 255, 255, 0.96);
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.auth-form input {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  font-size: 1rem;
+}
+
+.auth-submit {
+  margin-top: 0.8rem;
+}
+
+.auth-register {
+  background: #0f3f97;
+  color: #fff;
+}
+
+.auth-message {
+  min-height: 1.3rem;
+  color: #0f766e;
+  margin: 0;
+}
+
+.auth-message.error {
+  color: #b42318;
+}
+
+.auth-note {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+}
+
+.dashboard-header p {
+  margin: 0.3rem 0 0;
+  color: #4b5563;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.project-list,
+.asset-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.project-item,
+.asset-item {
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: #fff;
+}
+
+.project-item button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: #0b1220;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.project-item button strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.asset-item a {
+  font-weight: 700;
+  color: #0f3f97;
+}
+
+.admin-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.admin-panel h2 {
+  margin-top: 0;
+}
+
+.admin-intro {
+  margin-top: 0;
+  color: #4b5563;
+}
+
+.admin-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 10px;
+  min-height: 42px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.96rem;
+  font-family: inherit;
+}
+
+.admin-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+@media (max-width: 860px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

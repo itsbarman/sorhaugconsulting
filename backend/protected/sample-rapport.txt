@@ -1,0 +1,4 @@
+Dette er en demo-rapportfil.
+
+Her kan dere senere legge inn ekte rapporter og prosjektbilder i backend/protected/.
+Filene er ikke offentlig tilgjengelige uten gyldig innlogging og signert lenke.

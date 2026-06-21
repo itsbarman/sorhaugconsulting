@@ -1,0 +1,18 @@
+[
+  {
+    "id": "demo-prosjekt",
+    "name": "Demo prosjekt",
+    "description": "Eksempelprosjekt for innlogging og dashboard.",
+    "allowedUsers": [
+      "admin@sorhaugconsulting.no"
+    ],
+    "assets": [
+      {
+        "id": "rapport-001",
+        "title": "Tilstandsrapport (demo)",
+        "kind": "rapport",
+        "file": "sample-rapport.txt"
+      }
+    ]
+  }
+]
