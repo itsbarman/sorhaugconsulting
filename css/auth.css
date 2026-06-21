@@ -214,6 +214,47 @@ body.auth-portal {
   color: #b42318;
 }
 
+.auth-google {
+  margin-top: 0.5rem;
+}
+
+.auth-google-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 44px;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid rgba(31, 41, 55, 0.24);
+  font-weight: 700;
+}
+
+.auth-google-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
+  font-size: 0.82rem;
+}
+
+.auth-google-fallback:hover,
+.auth-google-fallback:focus {
+  background: #f8fafc;
+}
+
+.auth-google-button {
+  display: flex;
+  justify-content: center;
+  min-height: 42px;
+}
+
 .auth-success-badge {
   margin: 0;
   padding: 0.4rem 0.65rem;
@@ -227,6 +268,10 @@ body.auth-portal {
   color: #0b6b64;
   background: rgba(15, 118, 110, 0.14);
   border: 1px solid rgba(15, 118, 110, 0.3);
+}
+
+.auth-success-badge[hidden] {
+  display: none !important;
 }
 
 .auth-success-icon {

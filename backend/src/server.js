@@ -9,6 +9,7 @@ import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
 import express from 'express';
 import session from 'express-session';
+import { OAuth2Client } from 'google-auth-library';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
@@ -35,6 +36,9 @@ const ASSET_SIGNING_SECRET = process.env.ASSET_SIGNING_SECRET;
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrator';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+const GOOGLE_OAUTH_CLIENT_ID = String(process.env.GOOGLE_OAUTH_CLIENT_ID || '').trim();
+const GOOGLE_OAUTH_ALLOWED_DOMAIN = String(process.env.GOOGLE_OAUTH_ALLOWED_DOMAIN || '').trim().toLowerCase();
+const googleClient = GOOGLE_OAUTH_CLIENT_ID ? new OAuth2Client(GOOGLE_OAUTH_CLIENT_ID) : null;
 
 if (!DATABASE_URL) {
   throw new Error('DATABASE_URL mangler i .env');
@@ -98,6 +102,10 @@ const selfRegisterSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
   password: z.string().min(MIN_PASSWORD_LENGTH).max(200)
+});
+
+const googleLoginSchema = z.object({
+  credential: z.string().min(20)
 });
 
 const parseValidationError = (parsed, fallbackMessage) => {
@@ -488,6 +496,14 @@ const registerLimiter = rateLimit({
   message: { message: 'For mange registreringsforsok. Prov igjen senere.' }
 });
 
+const googleLoginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'For mange Google-innlogginger. Prov igjen senere.' }
+});
+
 const ensureAuthenticated = (req, res, next) => {
   if (!req.session.user?.id) {
     return res.status(401).json({ message: 'Ikke innlogget.' });
@@ -519,7 +535,7 @@ app.use((req, res, next) => {
     return next();
   }
 
-  if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+  if (req.path === '/api/auth/login' || req.path === '/api/auth/register' || req.path === '/api/auth/google') {
     return next();
   }
 
@@ -641,6 +657,84 @@ app.post('/api/auth/register', registerLimiter, async (req, res) => {
     };
     const csrfToken = ensureCsrfToken(req);
     return res.status(201).json({ ok: true, csrfToken, user: req.session.user });
+  });
+});
+
+app.get('/api/auth/google/config', (_req, res) => {
+  if (!GOOGLE_OAUTH_CLIENT_ID) {
+    return res.json({ enabled: false });
+  }
+
+  return res.json({ enabled: true, clientId: GOOGLE_OAUTH_CLIENT_ID });
+});
+
+app.post('/api/auth/google', googleLoginLimiter, async (req, res) => {
+  if (!googleClient || !GOOGLE_OAUTH_CLIENT_ID) {
+    return res.status(503).json({ message: 'Google-innlogging er ikke konfigurert.' });
+  }
+
+  const parsed = googleLoginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Ugyldig Google-token.' });
+  }
+
+  let tokenPayload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: parsed.data.credential,
+      audience: GOOGLE_OAUTH_CLIENT_ID
+    });
+    tokenPayload = ticket.getPayload();
+  } catch {
+    return res.status(401).json({ message: 'Google-verifisering feilet.' });
+  }
+
+  if (!tokenPayload?.email || !tokenPayload.email_verified) {
+    return res.status(401).json({ message: 'Google-kontoen mangler verifisert e-post.' });
+  }
+
+  const email = toUserEmail(tokenPayload.email);
+  if (GOOGLE_OAUTH_ALLOWED_DOMAIN && !email.endsWith(`@${GOOGLE_OAUTH_ALLOWED_DOMAIN}`)) {
+    return res.status(403).json({ message: 'E-postdomenet er ikke tillatt for Google-innlogging.' });
+  }
+
+  const displayName = String(tokenPayload.name || tokenPayload.given_name || 'Google-bruker').trim().slice(0, 120);
+  let dbUser = await dbGet(
+    'SELECT id, name, email, role FROM users WHERE email = $1',
+    [email]
+  );
+
+  if (!dbUser) {
+    const userId = randomId('usr');
+    const generatedPassword = crypto.randomBytes(32).toString('hex');
+    const passwordHash = await bcrypt.hash(generatedPassword, 12);
+
+    await dbRun(
+      'INSERT INTO users (id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5)',
+      [userId, displayName || 'Google-bruker', email, passwordHash, 'client']
+    );
+
+    dbUser = {
+      id: userId,
+      name: displayName || 'Google-bruker',
+      email,
+      role: 'client'
+    };
+  }
+
+  req.session.regenerate((error) => {
+    if (error) {
+      return res.status(500).json({ message: 'Klarte ikke opprette sesjon.' });
+    }
+
+    req.session.user = {
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      role: dbUser.role
+    };
+    const csrfToken = ensureCsrfToken(req);
+    return res.json({ ok: true, csrfToken, user: req.session.user });
   });
 });
 

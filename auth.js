@@ -88,6 +88,21 @@
     const registerPasswordInput = document.getElementById('registerPassword');
     const loginEmailInput = document.getElementById('email');
     const loginPasswordInput = document.getElementById('password');
+    const googleLoginWrap = document.getElementById('googleLoginWrap');
+    const googleLoginFallback = document.getElementById('googleLoginFallback');
+    const googleLoginButton = document.getElementById('googleLoginButton');
+    const googleLoginMessage = document.getElementById('googleLoginMessage');
+
+    const resetRegisterState = () => {
+      if (registerSuccessBadge) {
+        registerSuccessBadge.hidden = true;
+        registerSuccessBadge.classList.remove('show');
+      }
+      if (registerMessage) {
+        registerMessage.textContent = '';
+        registerMessage.classList.remove('error');
+      }
+    };
 
     const wireEnterNavigation = (steps) => {
       for (let i = 0; i < steps.length - 1; i += 1) {
@@ -113,6 +128,8 @@
       toggleRegisterButton.setAttribute('aria-expanded', visible ? 'true' : 'false');
       toggleRegisterButton.textContent = visible ? 'Skjul registrering' : 'Registrer ny bruker';
 
+      resetRegisterState();
+
       if (visible) {
         registerNameInput?.focus();
 
@@ -136,6 +153,11 @@
 
     setRegisterVisible(false);
 
+    window.addEventListener('pageshow', () => {
+      setRegisterVisible(false);
+      resetRegisterState();
+    });
+
     toggleRegisterButton?.addEventListener('click', () => {
       const nextVisible = registerWrap?.hidden;
       setRegisterVisible(Boolean(nextVisible));
@@ -143,6 +165,12 @@
 
     wireEnterNavigation([loginEmailInput, loginPasswordInput]);
     wireEnterNavigation([registerNameInput, registerEmailInput, registerPasswordInput]);
+
+    for (const input of [registerNameInput, registerEmailInput, registerPasswordInput]) {
+      input?.addEventListener('input', () => {
+        resetRegisterState();
+      });
+    }
 
     const passwordToggleButtons = document.querySelectorAll('.password-toggle');
     for (const button of passwordToggleButtons) {
@@ -169,6 +197,104 @@
         window.location.href = '/dashboard.html';
       }
     });
+
+    const loadGoogleScript = () =>
+      new Promise((resolve, reject) => {
+        if (window.google?.accounts?.id) {
+          resolve();
+          return;
+        }
+
+        const existing = document.querySelector('script[data-google-identity]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(new Error('Google script lastet ikke.')), { once: true });
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.dataset.googleIdentity = 'true';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Google script lastet ikke.'));
+        document.head.appendChild(script);
+      });
+
+    const initializeGoogleLogin = async () => {
+      if (!googleLoginWrap || !googleLoginButton || !googleLoginFallback) {
+        return;
+      }
+
+      const showGoogleFallback = (messageText) => {
+        googleLoginWrap.hidden = false;
+        googleLoginFallback.hidden = false;
+        googleLoginButton.hidden = true;
+        googleLoginFallback.onclick = () => {
+          setMessage(googleLoginMessage, messageText, true);
+        };
+      };
+
+      try {
+        const configResult = await request('/api/auth/google/config');
+        if (!configResult.response.ok || !configResult.payload?.enabled || !configResult.payload?.clientId) {
+          showGoogleFallback('Google-innlogging er ikke aktivert enda.');
+          return;
+        }
+
+        await loadGoogleScript();
+        if (!window.google?.accounts?.id) {
+          showGoogleFallback('Google-innlogging er midlertidig utilgjengelig.');
+          return;
+        }
+
+        const onGoogleCredential = async (googleResponse) => {
+          setMessage(googleLoginMessage, 'Logger inn med Google...');
+
+          const { response, payload } = await request('/api/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ credential: googleResponse.credential })
+          });
+
+          if (!response.ok) {
+            setMessage(googleLoginMessage, payload?.message || 'Google-innlogging feilet.', true);
+            triggerErrorFeedback();
+            return;
+          }
+
+          state.csrfToken = payload?.csrfToken || null;
+          setMessage(googleLoginMessage, 'Innlogging vellykket. Sender deg til dashboard...');
+          window.location.href = '/dashboard.html';
+        };
+
+        window.google.accounts.id.initialize({
+          client_id: configResult.payload.clientId,
+          callback: onGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+
+        googleLoginButton.innerHTML = '';
+        window.google.accounts.id.renderButton(googleLoginButton, {
+          theme: 'outline',
+          size: 'large',
+          type: 'standard',
+          shape: 'pill',
+          text: 'signin_with',
+          width: 320
+        });
+
+        googleLoginWrap.hidden = false;
+        googleLoginFallback.hidden = true;
+        googleLoginButton.hidden = false;
+        setMessage(googleLoginMessage, '');
+      } catch {
+        showGoogleFallback('Google-innlogging er midlertidig utilgjengelig.');
+      }
+    };
+
+    initializeGoogleLogin();
 
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -255,7 +381,6 @@
     const assetDownloadActions = document.getElementById('assetDownloadActions');
     const logoutButton = document.getElementById('logoutButton');
 
-    const createUserForm = document.getElementById('createUserForm');
     const createProjectForm = document.getElementById('createProjectForm');
     const createProjectMembers = document.getElementById('createProjectMembers');
     const addMemberForm = document.getElementById('addMemberForm');
@@ -625,31 +750,6 @@
         createProjectMembers.addEventListener('focus', lazyLoadMembers, { once: true });
         createProjectMembers.addEventListener('pointerdown', lazyLoadMembers, { once: true });
       }
-
-      createUserForm?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const data = new FormData(createUserForm);
-        const payload = {
-          name: String(data.get('name') || '').trim(),
-          email: String(data.get('email') || '').trim(),
-          password: String(data.get('password') || ''),
-          role: String(data.get('role') || 'client')
-        };
-
-        const result = await request('/api/admin/users', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-
-        if (!result.response.ok) {
-          setMessage(adminMessage, result.payload?.message || 'Klarte ikke opprette bruker.', true);
-          return;
-        }
-
-        createUserForm.reset();
-        await loadAdminUsers(true);
-        setMessage(adminMessage, `Bruker opprettet: ${result.payload.user.email}`);
-      });
 
       createProjectForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
