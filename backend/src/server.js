@@ -2,20 +2,21 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import bcrypt from 'bcryptjs';
+import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
 import express from 'express';
 import session from 'express-session';
-import SQLiteStoreFactory from 'connect-sqlite3';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
-import sqlite3 from 'sqlite3';
+import pg from 'pg';
 import { z } from 'zod';
 
 dotenv.config();
+
+const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,15 +24,18 @@ const __dirname = path.dirname(__filename);
 const SITE_ROOT = path.resolve(__dirname, '../../');
 const PROTECTED_DIR = path.resolve(__dirname, '../protected');
 const PROJECTS_FILE = path.resolve(__dirname, './data/projects.json');
-const APP_DB_FILE = path.resolve(__dirname, '../app.sqlite');
 
 const PORT = Number(process.env.PORT || 3000);
+const DATABASE_URL = process.env.DATABASE_URL;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const ASSET_SIGNING_SECRET = process.env.ASSET_SIGNING_SECRET;
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrator';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL mangler i .env');
+}
 if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
   throw new Error('SESSION_SECRET mangler eller er for kort. Bruk minst 32 tegn.');
 }
@@ -46,10 +50,20 @@ if (!fs.existsSync(PROTECTED_DIR)) {
   fs.mkdirSync(PROTECTED_DIR, { recursive: true });
 }
 
-const db = new sqlite3.Database(APP_DB_FILE);
-const dbRun = promisify(db.run.bind(db));
-const dbGet = promisify(db.get.bind(db));
-const dbAll = promisify(db.all.bind(db));
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+const dbRun = (query, params = []) => pool.query(query, params);
+const dbGet = async (query, params = []) => {
+  const result = await pool.query(query, params);
+  return result.rows[0] || null;
+};
+const dbAll = async (query, params = []) => {
+  const result = await pool.query(query, params);
+  return result.rows;
+};
 
 const toUserEmail = (value) => String(value || '').trim().toLowerCase();
 
@@ -146,7 +160,7 @@ const bootstrapFromJson = async () => {
     return;
   }
 
-  const row = await dbGet('SELECT COUNT(*) AS total FROM projects');
+  const row = await dbGet('SELECT COUNT(*)::int AS total FROM projects');
   if ((row?.total || 0) > 0) {
     return;
   }
@@ -162,17 +176,21 @@ const bootstrapFromJson = async () => {
   for (const project of parsed) {
     const projectId = String(project.id || randomId('prj'));
     await dbRun(
-      'INSERT OR IGNORE INTO projects (id, name, description) VALUES (?, ?, ?)',
+      `INSERT INTO projects (id, name, description)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (id) DO NOTHING`,
       [projectId, String(project.name || 'Prosjekt'), String(project.description || '')]
     );
 
     const members = Array.isArray(project.allowedUsers) ? project.allowedUsers : [];
     for (const emailRaw of members) {
       const email = toUserEmail(emailRaw);
-      const member = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
+      const member = await dbGet('SELECT id FROM users WHERE email = $1', [email]);
       if (member) {
         await dbRun(
-          'INSERT OR IGNORE INTO project_members (project_id, user_id) VALUES (?, ?)',
+          `INSERT INTO project_members (project_id, user_id)
+           VALUES ($1, $2)
+           ON CONFLICT (project_id, user_id) DO NOTHING`,
           [projectId, member.id]
         );
       }
@@ -184,9 +202,10 @@ const bootstrapFromJson = async () => {
       const originalName = sanitizeFileName(asset.file || `${assetId}.bin`);
       const storedName = sanitizeFileName(asset.file || `${assetId}.bin`);
       await dbRun(
-        `INSERT OR IGNORE INTO assets
+        `INSERT INTO assets
         (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (id) DO NOTHING`,
         [
           assetId,
           projectId,
@@ -203,16 +222,14 @@ const bootstrapFromJson = async () => {
 };
 
 const initDb = async () => {
-  await dbRun('PRAGMA foreign_keys = ON');
-
   await dbRun(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('admin', 'client')),
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      role TEXT NOT NULL CHECK (role IN ('admin', 'client')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
@@ -221,7 +238,7 @@ const initDb = async () => {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
@@ -229,7 +246,7 @@ const initDb = async () => {
     CREATE TABLE IF NOT EXISTS project_members (
       project_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (project_id, user_id),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -246,16 +263,16 @@ const initDb = async () => {
       stored_name TEXT NOT NULL,
       mime_type TEXT NOT NULL,
       size_bytes INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )
   `);
 
   const adminEmail = toUserEmail(ADMIN_EMAIL);
-  const adminExisting = await dbGet('SELECT id FROM users WHERE email = ?', [adminEmail]);
+  const adminExisting = await dbGet('SELECT id FROM users WHERE email = $1', [adminEmail]);
   if (!adminExisting) {
     await dbRun(
-      'INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5)',
       [randomId('usr'), ADMIN_NAME, adminEmail, ADMIN_PASSWORD_HASH, 'admin']
     );
   }
@@ -263,7 +280,7 @@ const initDb = async () => {
   await bootstrapFromJson();
 };
 
-const SQLiteStore = SQLiteStoreFactory(session);
+const PgSession = connectPgSimple(session);
 const app = express();
 
 if (process.env.NODE_ENV === 'production') {
@@ -304,9 +321,10 @@ const upload = multer({
 
 app.use(
   session({
-    store: new SQLiteStore({
-      db: 'sessions.sqlite',
-      dir: path.resolve(__dirname, '../')
+    store: new PgSession({
+      pool,
+      tableName: 'user_sessions',
+      createTableIfMissing: true
     }),
     name: 'sc_session',
     secret: SESSION_SECRET,
@@ -395,7 +413,7 @@ const getUserProjects = async (user) => {
     `SELECT p.id, p.name, p.description
      FROM projects p
      JOIN project_members pm ON pm.project_id = p.id
-     WHERE pm.user_id = ?
+     WHERE pm.user_id = $1
      ORDER BY p.name ASC`,
     [user.id]
   );
@@ -407,7 +425,7 @@ const userHasProjectAccess = async (user, projectId) => {
   }
 
   const row = await dbGet(
-    'SELECT 1 AS ok FROM project_members WHERE project_id = ? AND user_id = ?',
+    'SELECT 1 AS ok FROM project_members WHERE project_id = $1 AND user_id = $2',
     [projectId, user.id]
   );
   return Boolean(row?.ok);
@@ -417,7 +435,7 @@ const getProjectAssets = async (projectId) =>
   dbAll(
     `SELECT id, title, kind, file_name, stored_name, mime_type, size_bytes
      FROM assets
-     WHERE project_id = ?
+     WHERE project_id = $1
      ORDER BY created_at DESC`,
     [projectId]
   );
@@ -432,7 +450,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const password = parsed.data.password;
 
   const dbUser = await dbGet(
-    'SELECT id, name, email, password_hash, role FROM users WHERE email = ?',
+    'SELECT id, name, email, password_hash, role FROM users WHERE email = $1',
     [email]
   );
 
@@ -466,7 +484,7 @@ app.post('/api/auth/register', registerLimiter, async (req, res) => {
   }
 
   const email = toUserEmail(parsed.data.email);
-  const existing = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
+  const existing = await dbGet('SELECT id FROM users WHERE email = $1', [email]);
   if (existing) {
     return res.status(409).json({ message: 'Bruker med e-post finnes allerede.' });
   }
@@ -474,7 +492,7 @@ app.post('/api/auth/register', registerLimiter, async (req, res) => {
   const userId = randomId('usr');
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
   await dbRun(
-    'INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO users (id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5)',
     [userId, parsed.data.name, email, passwordHash, 'client']
   );
 
@@ -514,13 +532,12 @@ app.get('/api/auth/session', (req, res) => {
 
 app.get('/api/projects', ensureAuthenticated, async (req, res) => {
   const projects = await getUserProjects(req.session.user);
-
   return res.json({ projects });
 });
 
 app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res) => {
   const projectId = req.params.projectId;
-  const project = await dbGet('SELECT id, name, description FROM projects WHERE id = ?', [projectId]);
+  const project = await dbGet('SELECT id, name, description FROM projects WHERE id = $1', [projectId]);
 
   if (!project) {
     return res.status(404).json({ message: 'Fant ikke prosjektet.' });
@@ -532,7 +549,6 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
   }
 
   const assetsRaw = await getProjectAssets(project.id);
-
   const assets = assetsRaw.map((asset) => ({
     id: asset.id,
     title: asset.title,
@@ -570,7 +586,7 @@ app.get('/api/assets/:assetId', ensureAuthenticated, async (req, res) => {
             p.name AS project_name
      FROM assets a
      JOIN projects p ON p.id = a.project_id
-     WHERE a.id = ?`,
+     WHERE a.id = $1`,
     [req.params.assetId]
   );
 
@@ -615,7 +631,7 @@ app.post('/api/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) 
   }
 
   const email = toUserEmail(parsed.data.email);
-  const existing = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
+  const existing = await dbGet('SELECT id FROM users WHERE email = $1', [email]);
   if (existing) {
     return res.status(409).json({ message: 'Bruker med e-post finnes allerede.' });
   }
@@ -623,7 +639,7 @@ app.post('/api/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) 
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
   const userId = randomId('usr');
   await dbRun(
-    'INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO users (id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5)',
     [userId, parsed.data.name, email, passwordHash, parsed.data.role]
   );
 
@@ -639,7 +655,7 @@ app.post('/api/admin/projects', ensureAuthenticated, ensureAdmin, async (req, re
   }
 
   const projectId = randomId('prj');
-  await dbRun('INSERT INTO projects (id, name, description) VALUES (?, ?, ?)', [
+  await dbRun('INSERT INTO projects (id, name, description) VALUES ($1, $2, $3)', [
     projectId,
     parsed.data.name,
     parsed.data.description
@@ -647,10 +663,12 @@ app.post('/api/admin/projects', ensureAuthenticated, ensureAdmin, async (req, re
 
   const uniqueEmails = [...new Set(parsed.data.memberEmails.map(toUserEmail))];
   for (const email of uniqueEmails) {
-    const user = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
+    const user = await dbGet('SELECT id FROM users WHERE email = $1', [email]);
     if (user) {
       await dbRun(
-        'INSERT OR IGNORE INTO project_members (project_id, user_id) VALUES (?, ?)',
+        `INSERT INTO project_members (project_id, user_id)
+         VALUES ($1, $2)
+         ON CONFLICT (project_id, user_id) DO NOTHING`,
         [projectId, user.id]
       );
     }
@@ -667,12 +685,12 @@ app.post('/api/admin/projects/:projectId/members', ensureAuthenticated, ensureAd
     return res.status(400).json({ message: 'Ugyldig e-post.' });
   }
 
-  const project = await dbGet('SELECT id FROM projects WHERE id = ?', [req.params.projectId]);
+  const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
   if (!project) {
     return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
   }
 
-  const user = await dbGet('SELECT id, email, name FROM users WHERE email = ?', [
+  const user = await dbGet('SELECT id, email, name FROM users WHERE email = $1', [
     toUserEmail(parsed.data.email)
   ]);
 
@@ -681,7 +699,9 @@ app.post('/api/admin/projects/:projectId/members', ensureAuthenticated, ensureAd
   }
 
   await dbRun(
-    'INSERT OR IGNORE INTO project_members (project_id, user_id) VALUES (?, ?)',
+    `INSERT INTO project_members (project_id, user_id)
+     VALUES ($1, $2)
+     ON CONFLICT (project_id, user_id) DO NOTHING`,
     [project.id, user.id]
   );
 
@@ -694,7 +714,7 @@ app.post(
   ensureAdmin,
   upload.single('file'),
   async (req, res) => {
-    const project = await dbGet('SELECT id FROM projects WHERE id = ?', [req.params.projectId]);
+    const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
     if (!project) {
       if (req.file?.path && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
@@ -717,7 +737,7 @@ app.post(
     await dbRun(
       `INSERT INTO assets
       (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         assetId,
         project.id,
