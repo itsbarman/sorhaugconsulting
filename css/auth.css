@@ -29,7 +29,7 @@ body.auth-portal {
   min-height: 620px;
   background:
     linear-gradient(178deg, rgba(11, 18, 32, 0.1), rgba(11, 18, 32, 0.7)),
-    url('../images/Bilder%20nettside/IMG_7460.jpeg') center/cover no-repeat;
+    url('../images/Bilder%20nettside/login-dokumenter.jpg') center/cover no-repeat;
   position: relative;
 }
 
@@ -413,6 +413,25 @@ body.auth-portal {
   margin: 0;
   display: grid;
   gap: 0.45rem;
+}
+
+.asset-download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.8rem;
+}
+
+.asset-download-btn {
+  background: #0f3f97;
+  border-color: #0f3f97;
+  color: #ffffff;
+}
+
+.asset-download-btn:hover,
+.asset-download-btn:focus {
+  background: #0d357f;
+  border-color: #0d357f;
 }
 
 .asset-item a {

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,6 +18,8 @@ import { z } from 'zod';
 dotenv.config();
 
 const { Pool } = pg;
+const require = createRequire(import.meta.url);
+const archiver = require('archiver');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,6 +127,37 @@ const sanitizeFileName = (name) => {
 };
 
 const stripExtension = (name) => name.replace(/\.[^.]+$/, '');
+
+const detectAssetFolderKey = (fileName) => {
+  const name = String(fileName || '').toLowerCase();
+  const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+
+  if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'bilder';
+  if (ext === '.pdf') return 'pdf';
+  if (['.doc', '.docx', '.docs', '.txt'].includes(ext)) return 'docs';
+  if (['.xls', '.xlsx', '.csv'].includes(ext)) return 'excel';
+  if (['.ppt', '.pptx'].includes(ext)) return 'powerpoint';
+  if (ext === '.xml') return 'xml';
+  if (ext === '.zip') return 'zip';
+  if (ext === '.json') return 'json';
+  return 'andre-filer';
+};
+
+const folderLabelFromKey = (folderKey) => {
+  const labels = {
+    bilder: 'Bilder',
+    pdf: 'PDF',
+    docs: 'Docs',
+    excel: 'Excel',
+    powerpoint: 'PowerPoint',
+    xml: 'XML',
+    zip: 'ZIP',
+    json: 'JSON',
+    'andre-filer': 'Andre filer'
+  };
+
+  return labels[folderKey] || 'Andre filer';
+};
 
 const ALLOWED_FILE_EXTENSIONS = new Set([
   '.png',
@@ -660,6 +694,83 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
   }));
 
   return res.json({ project: { id: project.id, name: project.name }, assets });
+});
+
+app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, res) => {
+  const projectId = req.params.projectId;
+  const requestedFolder = String(req.query.folder || 'all').trim().toLowerCase();
+  const allowedFolders = new Set([
+    'all',
+    'bilder',
+    'pdf',
+    'docs',
+    'excel',
+    'powerpoint',
+    'xml',
+    'zip',
+    'json',
+    'andre-filer'
+  ]);
+
+  if (!allowedFolders.has(requestedFolder)) {
+    return res.status(400).json({ message: 'Ugyldig mappefilter.' });
+  }
+
+  const project = await dbGet('SELECT id, name FROM projects WHERE id = $1', [projectId]);
+  if (!project) {
+    return res.status(404).json({ message: 'Fant ikke prosjektet.' });
+  }
+
+  const hasAccess = await userHasProjectAccess(req.session.user, project.id);
+  if (!hasAccess) {
+    return res.status(403).json({ message: 'Ingen tilgang til prosjektet.' });
+  }
+
+  const assetsRaw = await getProjectAssets(project.id);
+  const filteredAssets = assetsRaw.filter((asset) => {
+    if (requestedFolder === 'all') {
+      return true;
+    }
+    return detectAssetFolderKey(asset.file_name) === requestedFolder;
+  });
+
+  if (!filteredAssets.length) {
+    return res.status(404).json({ message: 'Ingen filer funnet for valgt nedlasting.' });
+  }
+
+  const projectBase = stripExtension(sanitizeFileName(project.name || 'prosjekt'));
+  const suffix = requestedFolder === 'all' ? 'alle-filer' : requestedFolder;
+  const zipName = sanitizeFileName(`${projectBase}-${suffix}.zip`);
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
+
+  const archive = new archiver.ZipArchive({ zlib: { level: 9 } });
+  archive.on('error', (error) => {
+    console.error(error);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Klarte ikke lage ZIP-fil.' });
+      return;
+    }
+    res.end();
+  });
+
+  archive.pipe(res);
+
+  for (const asset of filteredAssets) {
+    const absolutePath = path.resolve(PROTECTED_DIR, asset.stored_name);
+    if (!absolutePath.startsWith(PROTECTED_DIR) || !fs.existsSync(absolutePath)) {
+      continue;
+    }
+
+    const folderKey = detectAssetFolderKey(asset.file_name);
+    const folderLabel = folderLabelFromKey(folderKey);
+    const safeFileName = sanitizeFileName(asset.file_name);
+    const zipPath = requestedFolder === 'all' ? `${folderLabel}/${safeFileName}` : safeFileName;
+    archive.file(absolutePath, { name: zipPath });
+  }
+
+  archive.finalize();
 });
 
 app.get('/api/assets/:assetId', ensureAuthenticated, async (req, res) => {

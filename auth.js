@@ -249,6 +249,7 @@
     const projectList = document.getElementById('projectList');
     const assetList = document.getElementById('assetList');
     const assetHint = document.getElementById('assetHint');
+    const assetDownloadActions = document.getElementById('assetDownloadActions');
     const logoutButton = document.getElementById('logoutButton');
 
     const createUserForm = document.getElementById('createUserForm');
@@ -261,6 +262,15 @@
 
     const clearAssets = () => {
       assetList.innerHTML = '';
+    };
+
+    const clearDownloadActions = () => {
+      if (!assetDownloadActions) {
+        return;
+      }
+
+      assetDownloadActions.innerHTML = '';
+      assetDownloadActions.hidden = true;
     };
 
     const deleteAsset = async (projectId, asset) => {
@@ -304,8 +314,49 @@
 
     const folderSortOrder = ['Bilder', 'PDF', 'Docs', 'Excel', 'PowerPoint', 'XML', 'ZIP', 'JSON', 'Andre filer'];
 
+    const folderKeyByName = {
+      Bilder: 'bilder',
+      PDF: 'pdf',
+      Docs: 'docs',
+      Excel: 'excel',
+      PowerPoint: 'powerpoint',
+      XML: 'xml',
+      ZIP: 'zip',
+      JSON: 'json',
+      'Andre filer': 'andre-filer'
+    };
+
+    const renderDownloadActions = (projectId, orderedFolders) => {
+      if (!assetDownloadActions || !projectId) {
+        return;
+      }
+
+      assetDownloadActions.innerHTML = '';
+      assetDownloadActions.hidden = false;
+
+      const createDownloadButton = (label, folderKey = 'all') => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-small asset-download-btn';
+        button.textContent = label;
+        button.addEventListener('click', () => {
+          const url = `/api/projects/${encodeURIComponent(projectId)}/download?folder=${encodeURIComponent(folderKey)}`;
+          window.open(url, '_blank', 'noopener');
+        });
+        return button;
+      };
+
+      assetDownloadActions.appendChild(createDownloadButton('Last ned hele prosjektet (ZIP)', 'all'));
+
+      for (const folderName of orderedFolders) {
+        const folderKey = folderKeyByName[folderName] || 'andre-filer';
+        assetDownloadActions.appendChild(createDownloadButton(`Last ned ${folderName} (ZIP)`, folderKey));
+      }
+    };
+
     const renderAssets = (assets) => {
       clearAssets();
+      clearDownloadActions();
       if (!assets.length) {
         assetHint.textContent = 'Ingen ressurser tilgjengelig i prosjektet.';
         return;
@@ -329,6 +380,8 @@
         const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
         return aRank - bRank;
       });
+
+      renderDownloadActions(state.activeProjectId, orderedFolders);
 
       for (const folderName of orderedFolders) {
         const folderLi = document.createElement('li');
@@ -405,11 +458,13 @@
         empty.textContent = 'Du har foreløpig ingen tildelte prosjekter.';
         projectList.appendChild(empty);
         assetHint.textContent = 'Ingen prosjekter tilgjengelig.';
+        clearDownloadActions();
         return;
       }
 
       state.activeProjectId = null;
       clearAssets();
+      clearDownloadActions();
       assetHint.textContent = 'Klikk på et prosjekt i "Dine prosjekter" for å vise ressurser.';
 
       for (const project of projects) {
