@@ -9,7 +9,6 @@ import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
 import express from 'express';
 import session from 'express-session';
-import { OAuth2Client } from 'google-auth-library';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
@@ -36,9 +35,6 @@ const ASSET_SIGNING_SECRET = process.env.ASSET_SIGNING_SECRET;
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrator';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
-const GOOGLE_OAUTH_CLIENT_ID = String(process.env.GOOGLE_OAUTH_CLIENT_ID || '').trim();
-const GOOGLE_OAUTH_ALLOWED_DOMAIN = String(process.env.GOOGLE_OAUTH_ALLOWED_DOMAIN || '').trim().toLowerCase();
-const googleClient = GOOGLE_OAUTH_CLIENT_ID ? new OAuth2Client(GOOGLE_OAUTH_CLIENT_ID) : null;
 
 if (!DATABASE_URL) {
   throw new Error('DATABASE_URL mangler i .env');
@@ -102,10 +98,6 @@ const selfRegisterSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
   password: z.string().min(MIN_PASSWORD_LENGTH).max(200)
-});
-
-const googleLoginSchema = z.object({
-  credential: z.string().min(20)
 });
 
 const parseValidationError = (parsed, fallbackMessage) => {
@@ -454,8 +446,7 @@ const upload = multer({
     cb(error);
   },
   limits: {
-    fileSize: 20 * 1024 * 1024,
-    files: 20
+    fileSize: 20 * 1024 * 1024
   }
 });
 
@@ -496,14 +487,6 @@ const registerLimiter = rateLimit({
   message: { message: 'For mange registreringsforsok. Prov igjen senere.' }
 });
 
-const googleLoginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: 'For mange Google-innlogginger. Prov igjen senere.' }
-});
-
 const ensureAuthenticated = (req, res, next) => {
   if (!req.session.user?.id) {
     return res.status(401).json({ message: 'Ikke innlogget.' });
@@ -535,7 +518,7 @@ app.use((req, res, next) => {
     return next();
   }
 
-  if (req.path === '/api/auth/login' || req.path === '/api/auth/register' || req.path === '/api/auth/google') {
+  if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
     return next();
   }
 
@@ -660,84 +643,6 @@ app.post('/api/auth/register', registerLimiter, async (req, res) => {
   });
 });
 
-app.get('/api/auth/google/config', (_req, res) => {
-  if (!GOOGLE_OAUTH_CLIENT_ID) {
-    return res.json({ enabled: false });
-  }
-
-  return res.json({ enabled: true, clientId: GOOGLE_OAUTH_CLIENT_ID });
-});
-
-app.post('/api/auth/google', googleLoginLimiter, async (req, res) => {
-  if (!googleClient || !GOOGLE_OAUTH_CLIENT_ID) {
-    return res.status(503).json({ message: 'Google-innlogging er ikke konfigurert.' });
-  }
-
-  const parsed = googleLoginSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: 'Ugyldig Google-token.' });
-  }
-
-  let tokenPayload;
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: parsed.data.credential,
-      audience: GOOGLE_OAUTH_CLIENT_ID
-    });
-    tokenPayload = ticket.getPayload();
-  } catch {
-    return res.status(401).json({ message: 'Google-verifisering feilet.' });
-  }
-
-  if (!tokenPayload?.email || !tokenPayload.email_verified) {
-    return res.status(401).json({ message: 'Google-kontoen mangler verifisert e-post.' });
-  }
-
-  const email = toUserEmail(tokenPayload.email);
-  if (GOOGLE_OAUTH_ALLOWED_DOMAIN && !email.endsWith(`@${GOOGLE_OAUTH_ALLOWED_DOMAIN}`)) {
-    return res.status(403).json({ message: 'E-postdomenet er ikke tillatt for Google-innlogging.' });
-  }
-
-  const displayName = String(tokenPayload.name || tokenPayload.given_name || 'Google-bruker').trim().slice(0, 120);
-  let dbUser = await dbGet(
-    'SELECT id, name, email, role FROM users WHERE email = $1',
-    [email]
-  );
-
-  if (!dbUser) {
-    const userId = randomId('usr');
-    const generatedPassword = crypto.randomBytes(32).toString('hex');
-    const passwordHash = await bcrypt.hash(generatedPassword, 12);
-
-    await dbRun(
-      'INSERT INTO users (id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5)',
-      [userId, displayName || 'Google-bruker', email, passwordHash, 'client']
-    );
-
-    dbUser = {
-      id: userId,
-      name: displayName || 'Google-bruker',
-      email,
-      role: 'client'
-    };
-  }
-
-  req.session.regenerate((error) => {
-    if (error) {
-      return res.status(500).json({ message: 'Klarte ikke opprette sesjon.' });
-    }
-
-    req.session.user = {
-      id: dbUser.id,
-      name: dbUser.name,
-      email: dbUser.email,
-      role: dbUser.role
-    };
-    const csrfToken = ensureCsrfToken(req);
-    return res.json({ ok: true, csrfToken, user: req.session.user });
-  });
-});
-
 app.post('/api/auth/logout', ensureAuthenticated, (req, res) => {
   req.session.destroy((error) => {
     if (error) {
@@ -788,6 +693,48 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
   }));
 
   return res.json({ project: { id: project.id, name: project.name }, assets });
+});
+
+app.get('/api/projects/:projectId/members', ensureAuthenticated, async (req, res) => {
+  const projectId = req.params.projectId;
+  const project = await dbGet('SELECT id, name FROM projects WHERE id = $1', [projectId]);
+
+  if (!project) {
+    return res.status(404).json({ message: 'Fant ikke prosjektet.' });
+  }
+
+  const hasAccess = await userHasProjectAccess(req.session.user, project.id);
+  if (!hasAccess) {
+    return res.status(403).json({ message: 'Ingen tilgang til prosjektet.' });
+  }
+
+  const members = await dbAll(
+    `SELECT DISTINCT m.id, m.name, m.email, m.role
+     FROM (
+       SELECT u.id, u.name, u.email, u.role
+       FROM users u
+       JOIN project_members pm ON pm.user_id = u.id
+       WHERE pm.project_id = $1
+
+       UNION ALL
+
+       SELECT u.id, u.name, u.email, u.role
+       FROM users u
+       WHERE u.role = 'admin'
+     ) AS m
+     ORDER BY m.role DESC, m.name ASC, m.email ASC`,
+    [project.id]
+  );
+
+  return res.json({
+    project: { id: project.id, name: project.name },
+    members: members.map((member) => ({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      role: member.role
+    }))
+  });
 });
 
 app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, res) => {
@@ -1015,7 +962,7 @@ app.post(
   '/api/admin/projects/:projectId/assets',
   ensureAuthenticated,
   ensureAdmin,
-  upload.array('files', 20),
+  upload.array('files', 100),
   async (req, res) => {
     const uploadedFiles = Array.isArray(req.files) ? req.files : [];
     const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
@@ -1124,8 +1071,8 @@ app.use((err, _req, res, _next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'En eller flere filer er for store. Maks 20 MB per fil.' });
     }
-    if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ message: 'Du kan laste opp maks 20 filer samtidig.' });
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ message: 'Du kan laste opp maks 100 filer per opplasting.' });
     }
     return res.status(400).json({ message: 'Filopplasting feilet.' });
   }
