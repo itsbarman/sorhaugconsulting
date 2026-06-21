@@ -4,7 +4,7 @@ Nettside: https://sorhaugconsulting.no/
 
 ## Lokal utvikling med innlogging + dashboard
 
-Prosjektet har nå en backend i `backend/` som gir:
+Prosjektet har nå en backend i `server/` som gir:
 
 - innlogging med sessions (HttpOnly-cookie)
 - rate limiting på innlogging
@@ -16,7 +16,7 @@ Prosjektet har nå en backend i `backend/` som gir:
 ### 1) Installer backend-avhengigheter
 
 ```bash
-cd backend
+cd server
 npm install
 ```
 
@@ -26,7 +26,7 @@ npm install
 cp .env.example .env
 ```
 
-Rediger `backend/.env`:
+Rediger `server/.env`:
 
 - sett `DATABASE_URL`, for eksempel `postgresql://sc_app:DITT_PASSORD@localhost:5432/sc_dev`
 - sett `ADMIN_NAME` (visningsnavn for første admin, valgfri)
@@ -90,7 +90,7 @@ Skriptet tester innlogging, CSRF, brukeropprettelse, prosjektopprettelse og filo
 ## Hvor data ligger
 
 - App-database: PostgreSQL-databasen du peker `DATABASE_URL` til
-- Beskyttede filer (rapporter/bilder): `backend/protected/`
+- Beskyttede filer (rapporter/bilder): `server/protected/`
 - Sessions: PostgreSQL-tabellen `user_sessions`
 
-Merk: `backend/src/data/projects.json` brukes kun som engangs bootstrap hvis databasen er tom.
+Merk: `server/src/data/projects.json` brukes kun som engangs bootstrap hvis databasen er tom.

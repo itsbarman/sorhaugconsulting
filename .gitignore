@@ -1,8 +1,2 @@
-backend/node_modules/
-backend/.env
-backend/sessions.sqlite
-backend/sessions.sqlite-shm
-backend/sessions.sqlite-wal
-backend/app.sqlite
-backend/app.sqlite-shm
-backend/app.sqlite-wal
+server/node_modules/
+server/.env
