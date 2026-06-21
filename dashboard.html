@@ -41,7 +41,7 @@
           <form id="createUserForm" class="admin-form" novalidate>
             <input name="name" placeholder="Navn" required />
             <input name="email" type="email" placeholder="E-post" required />
-            <input name="password" type="password" placeholder="Passord (min 12 tegn)" minlength="12" required />
+            <input name="password" type="password" placeholder="Passord (min 10 tegn)" minlength="10" required />
             <select name="role">
               <option value="client">Kunde</option>
               <option value="admin">Admin</option>
@@ -55,7 +55,9 @@
           <form id="createProjectForm" class="admin-form" novalidate>
             <input name="name" placeholder="Prosjektnavn" required />
             <textarea name="description" placeholder="Beskrivelse"></textarea>
-            <input name="memberEmails" placeholder="Medlemmer (kommaseparerte e-poster)" />
+            <label for="createProjectMembers">Velg medlemmer (valgfritt)</label>
+            <select name="memberEmails" id="createProjectMembers" multiple class="admin-member-select"></select>
+            <p class="admin-help">Hold Ctrl (Windows) for å velge flere.</p>
             <button class="btn btn-small" type="submit">Opprett prosjekt</button>
           </form>
         </article>
@@ -70,13 +72,19 @@
         </article>
 
         <article class="panel">
-          <h3>Last opp fil</h3>
+          <h3>Last opp filer</h3>
           <form id="uploadAssetForm" class="admin-form" novalidate>
             <select name="projectId" id="assetProjectSelect" required></select>
-            <input name="title" placeholder="Tittel" required />
+            <input name="title" placeholder="Valgfri tittel (brukes som prefix ved flere filer)" />
             <input name="kind" placeholder="Type (rapport/bilde)" value="rapport" required />
-            <input name="file" type="file" required />
-            <button class="btn btn-small" type="submit">Last opp fil</button>
+            <input
+              name="files"
+              type="file"
+              multiple
+              accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.xml,.txt,.csv,.doc,.docx,.docs,.xls,.xlsx,.ppt,.pptx,.zip,.json"
+              required
+            />
+            <button class="btn btn-small" type="submit">Last opp filer</button>
           </form>
         </article>
       </div>

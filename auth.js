@@ -2,7 +2,10 @@
   const state = {
     csrfToken: null,
     user: null,
-    projects: []
+    projects: [],
+    adminUsers: [],
+    adminUsersLoaded: false,
+    adminUsersLoading: false
   };
 
   const request = async (url, options = {}) => {
@@ -72,9 +75,93 @@
 
   const loginForm = document.getElementById('loginForm');
   if (loginForm) {
+    const authCard = document.querySelector('.auth-card');
     const message = document.getElementById('loginMessage');
     const registerForm = document.getElementById('registerForm');
     const registerMessage = document.getElementById('registerMessage');
+    const registerSuccessBadge = document.getElementById('registerSuccessBadge');
+    const toggleRegisterButton = document.getElementById('toggleRegisterButton');
+    const registerWrap = document.getElementById('registerWrap');
+    const registerNameInput = document.getElementById('registerName');
+    const registerEmailInput = document.getElementById('registerEmail');
+    const registerPasswordInput = document.getElementById('registerPassword');
+    const loginEmailInput = document.getElementById('email');
+    const loginPasswordInput = document.getElementById('password');
+
+    const wireEnterNavigation = (steps) => {
+      for (let i = 0; i < steps.length - 1; i += 1) {
+        const current = steps[i];
+        const next = steps[i + 1];
+        current?.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter') {
+            return;
+          }
+
+          event.preventDefault();
+          next?.focus();
+        });
+      }
+    };
+
+    const setRegisterVisible = (visible) => {
+      if (!registerWrap || !toggleRegisterButton) {
+        return;
+      }
+
+      registerWrap.hidden = !visible;
+      toggleRegisterButton.setAttribute('aria-expanded', visible ? 'true' : 'false');
+      toggleRegisterButton.textContent = visible ? 'Skjul registrering' : 'Registrer ny bruker';
+
+      if (visible) {
+        registerNameInput?.focus();
+
+        if (window.matchMedia('(max-width: 860px)').matches) {
+          window.setTimeout(() => {
+            registerWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 80);
+        }
+      }
+    };
+
+    const triggerErrorFeedback = () => {
+      if (!(authCard instanceof HTMLElement)) {
+        return;
+      }
+
+      authCard.classList.remove('shake');
+      void authCard.offsetWidth;
+      authCard.classList.add('shake');
+    };
+
+    setRegisterVisible(false);
+
+    toggleRegisterButton?.addEventListener('click', () => {
+      const nextVisible = registerWrap?.hidden;
+      setRegisterVisible(Boolean(nextVisible));
+    });
+
+    wireEnterNavigation([loginEmailInput, loginPasswordInput]);
+    wireEnterNavigation([registerNameInput, registerEmailInput, registerPasswordInput]);
+
+    const passwordToggleButtons = document.querySelectorAll('.password-toggle');
+    for (const button of passwordToggleButtons) {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-target');
+        if (!targetId) {
+          return;
+        }
+
+        const input = document.getElementById(targetId);
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+
+        const shouldShow = input.type === 'password';
+        input.type = shouldShow ? 'text' : 'password';
+        button.textContent = shouldShow ? 'Skjul' : 'Vis';
+        button.setAttribute('aria-label', shouldShow ? 'Skjul passord' : 'Vis passord');
+      });
+    }
 
     refreshSession().then((authenticated) => {
       if (authenticated) {
@@ -98,6 +185,7 @@
 
         if (!response.ok) {
           setMessage(message, payload?.message || 'Innlogging feilet.', true);
+          triggerErrorFeedback();
           return;
         }
 
@@ -107,6 +195,7 @@
         window.location.href = '/dashboard.html';
       } catch {
         setMessage(message, 'Nettverksfeil. Prov igjen.', true);
+        triggerErrorFeedback();
       }
     });
 
@@ -127,14 +216,25 @@
 
         if (!response.ok) {
           setMessage(registerMessage, payload?.message || 'Registrering feilet.', true);
+          triggerErrorFeedback();
           return;
         }
 
         state.csrfToken = payload?.csrfToken || null;
         setMessage(registerMessage, 'Bruker registrert. Sender deg til dashboard...');
-        window.location.href = '/dashboard.html';
+        if (registerSuccessBadge) {
+          registerSuccessBadge.hidden = false;
+          registerSuccessBadge.classList.remove('show');
+          void registerSuccessBadge.offsetWidth;
+          registerSuccessBadge.classList.add('show');
+        }
+
+        setTimeout(() => {
+          window.location.href = '/dashboard.html';
+        }, 650);
       } catch {
         setMessage(registerMessage, 'Nettverksfeil. Prov igjen.', true);
+        triggerErrorFeedback();
       }
     });
   }
@@ -152,6 +252,7 @@
 
     const createUserForm = document.getElementById('createUserForm');
     const createProjectForm = document.getElementById('createProjectForm');
+    const createProjectMembers = document.getElementById('createProjectMembers');
     const addMemberForm = document.getElementById('addMemberForm');
     const uploadAssetForm = document.getElementById('uploadAssetForm');
     const adminProjectSelect = document.getElementById('adminProjectSelect');
@@ -264,12 +365,79 @@
       return projects.payload.projects || [];
     };
 
+    const renderProjectMemberOptions = () => {
+      if (!createProjectMembers) {
+        return;
+      }
+
+      createProjectMembers.innerHTML = '';
+
+      if (!state.adminUsers.length) {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Ingen medlemmer tilgjengelig';
+        emptyOption.disabled = true;
+        createProjectMembers.appendChild(emptyOption);
+        return;
+      }
+
+      for (const user of state.adminUsers) {
+        if (user.role !== 'client') {
+          continue;
+        }
+
+        const option = document.createElement('option');
+        option.value = user.email;
+        option.textContent = `${user.name} (${user.email})`;
+        createProjectMembers.appendChild(option);
+      }
+    };
+
+    const loadAdminUsers = async (force = false) => {
+      if (state.user?.role !== 'admin') {
+        return [];
+      }
+
+      if (state.adminUsersLoading) {
+        return state.adminUsers;
+      }
+
+      if (state.adminUsersLoaded && !force) {
+        return state.adminUsers;
+      }
+
+      state.adminUsersLoading = true;
+
+      const usersResult = await request('/api/admin/users');
+      state.adminUsersLoading = false;
+
+      if (!usersResult.response.ok) {
+        return [];
+      }
+
+      state.adminUsers = usersResult.payload?.users || [];
+      state.adminUsersLoaded = true;
+      renderProjectMemberOptions();
+      return state.adminUsers;
+    };
+
     const bootAdmin = () => {
       if (state.user?.role !== 'admin' || !adminPanel) {
         return;
       }
 
       adminPanel.hidden = false;
+
+      if (createProjectMembers) {
+        createProjectMembers.innerHTML = '<option disabled>Trykk for aa laste medlemmer...</option>';
+
+        const lazyLoadMembers = async () => {
+          await loadAdminUsers();
+        };
+
+        createProjectMembers.addEventListener('focus', lazyLoadMembers, { once: true });
+        createProjectMembers.addEventListener('pointerdown', lazyLoadMembers, { once: true });
+      }
 
       createUserForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -292,16 +460,20 @@
         }
 
         createUserForm.reset();
+        await loadAdminUsers(true);
         setMessage(adminMessage, `Bruker opprettet: ${result.payload.user.email}`);
       });
 
       createProjectForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const data = new FormData(createProjectForm);
+        const selectedMemberEmails = createProjectMembers
+          ? Array.from(createProjectMembers.selectedOptions).map((option) => option.value)
+          : [];
         const payload = {
           name: String(data.get('name') || '').trim(),
           description: String(data.get('description') || '').trim(),
-          memberEmails: normalizeEmails(data.get('memberEmails'))
+          memberEmails: selectedMemberEmails
         };
 
         const result = await request('/api/admin/projects', {
@@ -355,7 +527,19 @@
 
         uploadAssetForm.reset();
         await loadAssets(projectId);
-        setMessage(adminMessage, `Fil lastet opp: ${result.payload.asset.fileName}`);
+        const uploadedAssets = Array.isArray(result.payload?.assets)
+          ? result.payload.assets
+          : result.payload?.asset
+            ? [result.payload.asset]
+            : [];
+
+        const uploadedCount = uploadedAssets.length;
+        if (uploadedCount === 1) {
+          setMessage(adminMessage, `Fil lastet opp: ${uploadedAssets[0].fileName}`);
+          return;
+        }
+
+        setMessage(adminMessage, `${uploadedCount} filer ble lastet opp.`);
       });
     };
 
