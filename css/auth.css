@@ -394,25 +394,76 @@ body.auth-portal {
   margin-bottom: 0.2rem;
 }
 
-.asset-folder {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 12px;
-  background: rgba(246, 249, 252, 0.72);
-  padding: 0.7rem;
-}
-
-.asset-folder__title {
-  margin: 0 0 0.55rem;
-  font-size: 0.95rem;
-  color: #0f3f97;
-}
-
-.asset-folder__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.asset-folders {
   display: grid;
-  gap: 0.45rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+}
+
+.asset-folder-tile {
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.asset-folder-tile:hover,
+.asset-folder-tile:focus {
+  border-color: rgba(15, 63, 151, 0.45);
+  box-shadow: 0 10px 20px rgba(15, 63, 151, 0.12);
+  transform: translateY(-1px);
+}
+
+.asset-folder-tile.active {
+  border-color: #0f3f97;
+  background: rgba(15, 63, 151, 0.08);
+}
+
+.asset-folder-icon {
+  width: 42px;
+  height: 28px;
+  border: 2px solid #0f3f97;
+  border-radius: 6px;
+  position: relative;
+  background: rgba(15, 63, 151, 0.12);
+}
+
+.asset-folder-icon::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 4px;
+  width: 16px;
+  height: 8px;
+  border: 2px solid #0f3f97;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: rgba(15, 63, 151, 0.12);
+}
+
+.asset-folder-name {
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.asset-folder-count {
+  font-size: 0.84rem;
+  color: #5d6a7f;
+}
+
+.asset-folder-content {
+  margin-top: 0.85rem;
+}
+
+.asset-folder-content__title {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  color: #0f3f97;
 }
 
 .asset-download-actions {

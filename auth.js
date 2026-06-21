@@ -247,6 +247,9 @@
     const adminMessage = document.getElementById('adminMessage');
 
     const projectList = document.getElementById('projectList');
+    const assetFolders = document.getElementById('assetFolders');
+    const assetFolderContent = document.getElementById('assetFolderContent');
+    const assetFolderTitle = document.getElementById('assetFolderTitle');
     const assetList = document.getElementById('assetList');
     const assetHint = document.getElementById('assetHint');
     const assetDownloadActions = document.getElementById('assetDownloadActions');
@@ -262,6 +265,20 @@
 
     const clearAssets = () => {
       assetList.innerHTML = '';
+      if (assetFolderContent) {
+        assetFolderContent.hidden = true;
+      }
+      if (assetFolderTitle) {
+        assetFolderTitle.textContent = '';
+      }
+    };
+
+    const clearAssetFolders = () => {
+      if (!assetFolders) {
+        return;
+      }
+
+      assetFolders.innerHTML = '';
     };
 
     const clearDownloadActions = () => {
@@ -356,13 +373,14 @@
 
     const renderAssets = (assets) => {
       clearAssets();
+      clearAssetFolders();
       clearDownloadActions();
       if (!assets.length) {
         assetHint.textContent = 'Ingen ressurser tilgjengelig i prosjektet.';
         return;
       }
 
-      assetHint.textContent = 'Ressurser sortert i mapper. Lenkene er tidsbegrensede.';
+      assetHint.textContent = 'Velg en mappe for å vise filer.';
 
       const groupedAssets = new Map();
       for (const asset of assets) {
@@ -383,18 +401,17 @@
 
       renderDownloadActions(state.activeProjectId, orderedFolders);
 
-      for (const folderName of orderedFolders) {
-        const folderLi = document.createElement('li');
-        folderLi.className = 'asset-folder';
+      const renderFolderItems = (folderName) => {
+        clearAssets();
+        if (assetFolderContent) {
+          assetFolderContent.hidden = false;
+        }
+        if (assetFolderTitle) {
+          assetFolderTitle.textContent = `${folderName}`;
+        }
 
-        const folderTitle = document.createElement('h3');
-        folderTitle.className = 'asset-folder__title';
-        folderTitle.textContent = folderName;
-
-        const folderItems = document.createElement('ul');
-        folderItems.className = 'asset-folder__list';
-
-        for (const asset of groupedAssets.get(folderName)) {
+        const selectedAssets = groupedAssets.get(folderName) || [];
+        for (const asset of selectedAssets) {
           const li = document.createElement('li');
           li.className = 'asset-item';
 
@@ -428,11 +445,27 @@
           }
 
           li.append(label, meta, actions);
-          folderItems.appendChild(li);
+          assetList.appendChild(li);
         }
+      };
 
-        folderLi.append(folderTitle, folderItems);
-        assetList.appendChild(folderLi);
+      for (const folderName of orderedFolders) {
+        const folderButton = document.createElement('button');
+        folderButton.type = 'button';
+        folderButton.className = 'asset-folder-tile';
+        folderButton.innerHTML = `
+          <span class="asset-folder-icon" aria-hidden="true"></span>
+          <span class="asset-folder-name">${folderName}</span>
+          <span class="asset-folder-count">${(groupedAssets.get(folderName) || []).length} filer</span>
+        `;
+
+        folderButton.addEventListener('click', () => {
+          assetFolders?.querySelectorAll('.asset-folder-tile').forEach((item) => item.classList.remove('active'));
+          folderButton.classList.add('active');
+          renderFolderItems(folderName);
+        });
+
+        assetFolders?.appendChild(folderButton);
       }
     };
 
@@ -464,6 +497,7 @@
 
       state.activeProjectId = null;
       clearAssets();
+      clearAssetFolders();
       clearDownloadActions();
       assetHint.textContent = 'Klikk på et prosjekt i "Dine prosjekter" for å vise ressurser.';
 
