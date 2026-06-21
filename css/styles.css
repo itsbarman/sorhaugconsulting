@@ -98,6 +98,7 @@ a:hover{ text-decoration:underline; }
   font-weight: 650;
   padding: 10px 10px;
   border-radius: 10px;
+  white-space: nowrap;
 }
 /* Ensure buttons inside the nav use white text for contrast */
 .nav a.btn{
@@ -105,6 +106,34 @@ a:hover{ text-decoration:underline; }
   background: var(--accent2) !important;
   border-color: var(--accent2) !important;
   box-shadow: 0 10px 24px rgba(2,6,23,.10);
+}
+.nav a.nav-auth-btn{
+  color: #ffffff !important;
+  background: #15803d !important;
+  border-color: #15803d !important;
+  box-shadow: 0 10px 24px rgba(2,6,23,.10);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+}
+.nav a.nav-auth-btn:hover,
+.nav a.nav-auth-btn:focus{
+  background: #166534 !important;
+  border-color: #166534 !important;
+  text-decoration:none;
+}
+.nav a.nav-dashboard-btn{
+  color: #ffffff !important;
+  background: #0f3f97 !important;
+  border-color: #0f3f97 !important;
+  box-shadow: 0 10px 24px rgba(2,6,23,.10);
+}
+.nav a.nav-dashboard-btn:hover,
+.nav a.nav-dashboard-btn:focus{
+  background: #0d357f !important;
+  border-color: #0d357f !important;
+  text-decoration:none;
 }
 .nav a:hover{
   background: rgba(37,99,235,.08);

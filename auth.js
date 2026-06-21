@@ -746,7 +746,7 @@
 
     logoutButton?.addEventListener('click', async () => {
       await request('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/innlogging.html';
+      window.location.href = 'https://sorhaugconsulting.no';
     });
 
     bootDashboard().catch(() => {
