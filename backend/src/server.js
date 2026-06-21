@@ -65,12 +65,14 @@ const dbAll = async (query, params = []) => {
   return result.rows;
 };
 
+const MIN_PASSWORD_LENGTH = 10;
+
 const toUserEmail = (value) => String(value || '').trim().toLowerCase();
 
 const userCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
-  password: z.string().min(12).max(200),
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(200),
   role: z.enum(['admin', 'client']).default('client')
 });
 
@@ -86,18 +88,101 @@ const projectMemberSchema = z.object({
 
 const loginSchema = z.object({
   email: z.string().trim().email().max(200),
-  password: z.string().min(12).max(200)
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(200)
 });
 
 const selfRegisterSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
-  password: z.string().min(12).max(200)
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(200)
 });
+
+const parseValidationError = (parsed, fallbackMessage) => {
+  const firstIssue = parsed?.error?.issues?.[0];
+  if (!firstIssue) {
+    return fallbackMessage;
+  }
+
+  if (firstIssue.path?.[0] === 'password' && firstIssue.code === 'too_small') {
+    return `Passord ma vaere minst ${MIN_PASSWORD_LENGTH} tegn.`;
+  }
+
+  if (firstIssue.path?.[0] === 'email') {
+    return 'Ugyldig e-postadresse.';
+  }
+
+  if (firstIssue.path?.[0] === 'name') {
+    return 'Navn ma vaere minst 2 tegn.';
+  }
+
+  return fallbackMessage;
+};
 
 const sanitizeFileName = (name) => {
   const base = path.basename(String(name || 'file'));
   return base.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120) || 'file';
+};
+
+const stripExtension = (name) => name.replace(/\.[^.]+$/, '');
+
+const ALLOWED_FILE_EXTENSIONS = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.pdf',
+  '.xml',
+  '.txt',
+  '.csv',
+  '.doc',
+  '.docx',
+  '.docs',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.zip',
+  '.json'
+]);
+
+const isAllowedUploadFile = (file) => {
+  const ext = path.extname(String(file?.originalname || '')).toLowerCase();
+  if (ALLOWED_FILE_EXTENSIONS.has(ext)) {
+    return true;
+  }
+
+  const mimeType = String(file?.mimetype || '').toLowerCase();
+  if (mimeType.startsWith('image/')) {
+    return true;
+  }
+
+  const allowedMimeTypes = new Set([
+    'application/pdf',
+    'application/xml',
+    'text/xml',
+    'text/plain',
+    'text/csv',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/zip',
+    'application/json'
+  ]);
+
+  return allowedMimeTypes.has(mimeType);
+};
+
+const removeUploadedFiles = (files) => {
+  for (const file of files || []) {
+    if (file?.path && fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+  }
 };
 
 const randomId = (prefix) => `${prefix}_${crypto.randomBytes(8).toString('hex')}`;
@@ -314,8 +399,21 @@ const upload = multer({
       cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`);
     }
   }),
+  fileFilter: (_req, file, cb) => {
+    if (isAllowedUploadFile(file)) {
+      cb(null, true);
+      return;
+    }
+
+    const error = new Error(
+      'Ugyldig filtype. Tillatt: bilder, PDF, XML, DOC/DOCX, XLS/XLSX, PPT/PPTX, TXT, CSV, ZIP og JSON.'
+    );
+    error.statusCode = 400;
+    cb(error);
+  },
   limits: {
-    fileSize: 20 * 1024 * 1024
+    fileSize: 20 * 1024 * 1024,
+    files: 20
   }
 });
 
@@ -443,7 +541,7 @@ const getProjectAssets = async (projectId) =>
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: 'Ugyldig e-post eller passordformat.' });
+    return res.status(400).json({ message: parseValidationError(parsed, 'Ugyldig e-post eller passordformat.') });
   }
 
   const email = toUserEmail(parsed.data.email);
@@ -480,7 +578,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 app.post('/api/auth/register', registerLimiter, async (req, res) => {
   const parsed = selfRegisterSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: 'Ugyldige registreringsdata.' });
+    return res.status(400).json({ message: parseValidationError(parsed, 'Ugyldige registreringsdata.') });
   }
 
   const email = toUserEmail(parsed.data.email);
@@ -627,7 +725,7 @@ app.get('/api/admin/users', ensureAuthenticated, ensureAdmin, async (_req, res) 
 app.post('/api/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
   const parsed = userCreateSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: 'Ugyldige brukerdata.' });
+    return res.status(400).json({ message: parseValidationError(parsed, 'Ugyldige brukerdata.') });
   }
 
   const email = toUserEmail(parsed.data.email);
@@ -712,47 +810,54 @@ app.post(
   '/api/admin/projects/:projectId/assets',
   ensureAuthenticated,
   ensureAdmin,
-  upload.single('file'),
+  upload.array('files', 20),
   async (req, res) => {
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
     const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
     if (!project) {
-      if (req.file?.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
+      removeUploadedFiles(uploadedFiles);
       return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'Du ma laste opp en fil.' });
+    if (!uploadedFiles.length) {
+      return res.status(400).json({ message: 'Du ma laste opp minst en fil.' });
     }
 
     const title = String(req.body.title || '').trim();
     const kind = String(req.body.kind || 'dokument').trim().slice(0, 60) || 'dokument';
-    if (!title) {
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'Tittel er paakrevd.' });
+
+    const createdAssets = [];
+    for (let index = 0; index < uploadedFiles.length; index += 1) {
+      const file = uploadedFiles[index];
+      const fileName = sanitizeFileName(file.originalname);
+      const fallbackTitle = stripExtension(fileName);
+      const computedTitle = title
+        ? uploadedFiles.length === 1
+          ? title
+          : `${title} - ${index + 1}`
+        : fallbackTitle || `Fil ${index + 1}`;
+
+      const assetId = randomId('ast');
+      await dbRun(
+        `INSERT INTO assets
+        (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          assetId,
+          project.id,
+          computedTitle,
+          kind,
+          fileName,
+          file.filename,
+          file.mimetype || 'application/octet-stream',
+          file.size || 0
+        ]
+      );
+
+      createdAssets.push({ id: assetId, title: computedTitle, kind, fileName });
     }
 
-    const assetId = randomId('ast');
-    await dbRun(
-      `INSERT INTO assets
-      (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [
-        assetId,
-        project.id,
-        title,
-        kind,
-        sanitizeFileName(req.file.originalname),
-        req.file.filename,
-        req.file.mimetype || 'application/octet-stream',
-        req.file.size || 0
-      ]
-    );
-
-    return res.status(201).json({
-      asset: { id: assetId, title, kind, fileName: sanitizeFileName(req.file.originalname) }
-    });
+    return res.status(201).json({ assets: createdAssets, count: createdAssets.length });
   }
 );
 
@@ -784,6 +889,20 @@ app.use(
 );
 
 app.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'En eller flere filer er for store. Maks 20 MB per fil.' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ message: 'Du kan laste opp maks 20 filer samtidig.' });
+    }
+    return res.status(400).json({ message: 'Filopplasting feilet.' });
+  }
+
+  if (err?.statusCode === 400) {
+    return res.status(400).json({ message: err.message || 'Ugyldig opplastingsforesporsel.' });
+  }
+
   console.error(err);
   res.status(500).json({ message: 'Uventet serverfeil.' });
 });
