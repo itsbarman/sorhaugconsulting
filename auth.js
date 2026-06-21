@@ -3,6 +3,7 @@
     csrfToken: null,
     user: null,
     projects: [],
+    activeProjectId: null,
     adminUsers: [],
     adminUsersLoaded: false,
     adminUsersLoading: false
@@ -194,7 +195,7 @@
         setMessage(message, 'Innlogging vellykket. Sender deg til dashboard...');
         window.location.href = '/dashboard.html';
       } catch {
-        setMessage(message, 'Nettverksfeil. Prov igjen.', true);
+        setMessage(message, 'Nettverksfeil. Prøv igjen.', true);
         triggerErrorFeedback();
       }
     });
@@ -233,7 +234,7 @@
           window.location.href = '/dashboard.html';
         }, 650);
       } catch {
-        setMessage(registerMessage, 'Nettverksfeil. Prov igjen.', true);
+        setMessage(registerMessage, 'Nettverksfeil. Prøv igjen.', true);
         triggerErrorFeedback();
       }
     });
@@ -262,6 +263,47 @@
       assetList.innerHTML = '';
     };
 
+    const deleteAsset = async (projectId, asset) => {
+      if (!projectId || !asset?.id) {
+        return;
+      }
+
+      const confirmed = window.confirm(`Slette filen ${asset.fileName || asset.title}?`);
+      if (!confirmed) {
+        return;
+      }
+
+      const result = await request(
+        `/api/admin/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!result.response.ok) {
+        setMessage(adminMessage, result.payload?.message || 'Klarte ikke slette filen.', true);
+        return;
+      }
+
+      setMessage(adminMessage, `Fil slettet: ${asset.fileName || asset.title}`);
+      await loadAssets(projectId);
+    };
+
+    const detectAssetFolder = (asset) => {
+      const name = String(asset?.fileName || '').toLowerCase();
+      const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+
+      if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'Bilder';
+      if (ext === '.pdf') return 'PDF';
+      if (['.doc', '.docx', '.docs', '.txt'].includes(ext)) return 'Docs';
+      if (['.xls', '.xlsx', '.csv'].includes(ext)) return 'Excel';
+      if (['.ppt', '.pptx'].includes(ext)) return 'PowerPoint';
+      if (ext === '.xml') return 'XML';
+      if (ext === '.zip') return 'ZIP';
+      if (ext === '.json') return 'JSON';
+      return 'Andre filer';
+    };
+
+    const folderSortOrder = ['Bilder', 'PDF', 'Docs', 'Excel', 'PowerPoint', 'XML', 'ZIP', 'JSON', 'Andre filer'];
+
     const renderAssets = (assets) => {
       clearAssets();
       if (!assets.length) {
@@ -269,23 +311,75 @@
         return;
       }
 
-      assetHint.textContent = 'Lenkene under er tidsbegrensede.';
+      assetHint.textContent = 'Ressurser sortert i mapper. Lenkene er tidsbegrensede.';
+
+      const groupedAssets = new Map();
       for (const asset of assets) {
-        const li = document.createElement('li');
-        li.className = 'asset-item';
+        const folderName = detectAssetFolder(asset);
+        if (!groupedAssets.has(folderName)) {
+          groupedAssets.set(folderName, []);
+        }
+        groupedAssets.get(folderName).push(asset);
+      }
 
-        const label = document.createElement('p');
-        label.textContent = `${asset.kind}: ${asset.title}`;
-        label.style.margin = '0 0 .35rem';
+      const orderedFolders = [...groupedAssets.keys()].sort((a, b) => {
+        const aIndex = folderSortOrder.indexOf(a);
+        const bIndex = folderSortOrder.indexOf(b);
+        const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+        const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+        return aRank - bRank;
+      });
 
-        const link = document.createElement('a');
-        link.href = asset.url;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.textContent = `Aapne fil (${formatBytes(asset.sizeBytes)})`;
+      for (const folderName of orderedFolders) {
+        const folderLi = document.createElement('li');
+        folderLi.className = 'asset-folder';
 
-        li.append(label, link);
-        assetList.appendChild(li);
+        const folderTitle = document.createElement('h3');
+        folderTitle.className = 'asset-folder__title';
+        folderTitle.textContent = folderName;
+
+        const folderItems = document.createElement('ul');
+        folderItems.className = 'asset-folder__list';
+
+        for (const asset of groupedAssets.get(folderName)) {
+          const li = document.createElement('li');
+          li.className = 'asset-item';
+
+          const label = document.createElement('p');
+          label.textContent = asset.title;
+          label.style.margin = '0 0 .35rem';
+
+          const meta = document.createElement('p');
+          meta.className = 'asset-item__meta';
+          meta.textContent = asset.fileName;
+
+          const link = document.createElement('a');
+          link.href = asset.url;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = `Åpne fil (${formatBytes(asset.sizeBytes)})`;
+
+          const actions = document.createElement('div');
+          actions.className = 'asset-item__actions';
+          actions.appendChild(link);
+
+          if (state.user?.role === 'admin' && state.activeProjectId) {
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'btn btn-small asset-delete-btn';
+            deleteButton.textContent = 'Slett fil';
+            deleteButton.addEventListener('click', () => {
+              deleteAsset(state.activeProjectId, asset);
+            });
+            actions.appendChild(deleteButton);
+          }
+
+          li.append(label, meta, actions);
+          folderItems.appendChild(li);
+        }
+
+        folderLi.append(folderTitle, folderItems);
+        assetList.appendChild(folderLi);
       }
     };
 
@@ -308,11 +402,15 @@
       if (!projects.length) {
         const empty = document.createElement('li');
         empty.className = 'project-item';
-        empty.textContent = 'Du har forelopig ingen tildelte prosjekter.';
+        empty.textContent = 'Du har foreløpig ingen tildelte prosjekter.';
         projectList.appendChild(empty);
         assetHint.textContent = 'Ingen prosjekter tilgjengelig.';
         return;
       }
+
+      state.activeProjectId = null;
+      clearAssets();
+      assetHint.textContent = 'Klikk på et prosjekt i "Dine prosjekter" for å vise ressurser.';
 
       for (const project of projects) {
         const li = document.createElement('li');
@@ -321,7 +419,12 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.innerHTML = `<strong>${project.name}</strong><span>${project.description || ''}</span>`;
-        button.addEventListener('click', () => loadAssets(project.id));
+        button.addEventListener('click', async () => {
+          state.activeProjectId = project.id;
+          projectList.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          await loadAssets(project.id);
+        });
 
         li.appendChild(button);
         projectList.appendChild(li);
@@ -356,11 +459,6 @@
 
       renderProjects(projects.payload.projects || []);
       refreshAdminProjectSelects();
-
-      const firstProject = (projects.payload.projects || [])[0];
-      if (firstProject) {
-        loadAssets(firstProject.id);
-      }
 
       return projects.payload.projects || [];
     };
@@ -429,7 +527,7 @@
       adminPanel.hidden = false;
 
       if (createProjectMembers) {
-        createProjectMembers.innerHTML = '<option disabled>Trykk for aa laste medlemmer...</option>';
+        createProjectMembers.innerHTML = '<option disabled>Trykk for å laste medlemmer...</option>';
 
         const lazyLoadMembers = async () => {
           await loadAdminUsers();
@@ -526,7 +624,9 @@
         }
 
         uploadAssetForm.reset();
-        await loadAssets(projectId);
+        if (state.activeProjectId === projectId) {
+          await loadAssets(projectId);
+        }
         const uploadedAssets = Array.isArray(result.payload?.assets)
           ? result.payload.assets
           : result.payload?.asset

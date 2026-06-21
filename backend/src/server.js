@@ -861,6 +861,32 @@ app.post(
   }
 );
 
+app.delete('/api/admin/projects/:projectId/assets/:assetId', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
+  if (!project) {
+    return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
+  }
+
+  const asset = await dbGet(
+    `SELECT id, project_id, stored_name, file_name
+     FROM assets
+     WHERE id = $1`,
+    [req.params.assetId]
+  );
+
+  if (!asset || asset.project_id !== project.id) {
+    return res.status(404).json({ message: 'Fant ikke filen i prosjektet.' });
+  }
+
+  const absolutePath = path.resolve(PROTECTED_DIR, asset.stored_name);
+  if (absolutePath.startsWith(PROTECTED_DIR) && fs.existsSync(absolutePath)) {
+    fs.unlinkSync(absolutePath);
+  }
+
+  await dbRun('DELETE FROM assets WHERE id = $1', [asset.id]);
+  return res.json({ ok: true, deleted: { id: asset.id, fileName: asset.file_name } });
+});
+
 app.get('/dashboard', ensureDashboardAccess, (req, res) => {
   res.sendFile(path.join(SITE_ROOT, 'dashboard.html'));
 });

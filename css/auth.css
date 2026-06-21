@@ -383,14 +383,66 @@ body.auth-portal {
   padding: 0;
 }
 
+.project-item button.active {
+  background: rgba(15, 63, 151, 0.1);
+  border-radius: 8px;
+  padding: 0.35rem;
+}
+
 .project-item button strong {
   display: block;
   margin-bottom: 0.2rem;
 }
 
+.asset-folder {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: rgba(246, 249, 252, 0.72);
+  padding: 0.7rem;
+}
+
+.asset-folder__title {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  color: #0f3f97;
+}
+
+.asset-folder__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
 .asset-item a {
   font-weight: 700;
   color: #0f3f97;
+}
+
+.asset-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.asset-delete-btn {
+  background: #b42318;
+  border-color: #b42318;
+  color: #ffffff;
+}
+
+.asset-delete-btn:hover,
+.asset-delete-btn:focus {
+  background: #8f1c14;
+  border-color: #8f1c14;
+}
+
+.asset-item__meta {
+  margin: 0 0 0.35rem;
+  color: #5d6a7f;
+  font-size: 0.86rem;
 }
 
 .admin-panel {
