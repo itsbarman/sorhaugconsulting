@@ -37,7 +37,7 @@
         <div class="prose">
 
           <h1>Personvernerklæring</h1>
-          <p class="lead">Sist oppdatert: <time datetime="2026-05-16">16. mai 2026</time></p>
+          <p class="lead">Sist oppdatert: <time datetime="2026-06-21">21. juni 2026</time></p>
 
           <div class="meta-box">
             <strong>Behandlingsansvarlig:</strong> Sørhaug Consulting AS, Norge.<br />
@@ -46,17 +46,17 @@
 
           <h2>1. Innledning</h2>
           <p>Sørhaug Consulting AS («vi», «oss») er opptatt av å beskytte personopplysningene dine. Denne erklæringen beskriver hvilke personopplysninger vi samler inn, hvorfor vi gjør det, hvordan de brukes, og hvilke rettigheter du har etter EUs personvernforordning (GDPR) og norsk personopplysningslov.</p>
-          <p>Erklæringen gjelder for behandling av personopplysninger i forbindelse med bruk av nettsiden <strong>sorhaugconsulting.no</strong> og henvendelser til oss via kontaktskjema eller e-post.</p>
+          <p>Erklæringen gjelder for behandling av personopplysninger i forbindelse med bruk av nettsiden <strong>sorhaugconsulting.no</strong>, innlogging til kundeportal (dashboard), og henvendelser via kontaktskjema eller e-post.</p>
 
           <h2>2. Hvilke personopplysninger samler vi inn?</h2>
-          <p>Vi samler kun inn opplysninger du aktivt oppgir:</p>
+          <p>Vi behandler følgende kategorier personopplysninger:</p>
           <ul>
-            <li><strong>Navn</strong> – oppgitt i kontaktskjema</li>
-            <li><strong>E-postadresse</strong> – oppgitt i kontaktskjema</li>
-            <li><strong>Kommune / sted</strong> – oppgitt i kontaktskjema (valgfritt)</li>
-            <li><strong>Meldingsinnhold</strong> – beskrivelse av bygg, omfang og tidsønske</li>
+            <li><strong>Kontaktopplysninger</strong> – navn, e-postadresse, kommune/sted (frivillig) og meldingsinnhold i kontaktskjema.</li>
+            <li><strong>Kontoopplysninger</strong> – navn, e-postadresse, rolle (kunde/admin) og passord-hash for innloggede brukere.</li>
+            <li><strong>Tilgangs- og sikkerhetsdata</strong> – aktiv sesjon, CSRF-token og prosjektmedlemskap som kreves for sikker tilgangsstyring.</li>
+            <li><strong>Prosjekt- og filopplysninger</strong> – prosjektnavn, beskrivelser, filmetadata og opplastede dokumenter/bilder knyttet til prosjekter.</li>
           </ul>
-          <p>Vi samler ikke inn opplysninger automatisk (ingen informasjonskapsler utover det som er teknisk nødvendig, se <a href="informasjonskapsler.html">vår informasjonskapselside</a>). Vi benytter ingen analyse- eller sporingsverktøy.</p>
+          <p>Vi bruker ikke analyse- eller markedsføringsverktøy for sporing av besøkende.</p>
 
           <h2>3. Formål og rettslig grunnlag</h2>
           <table>
@@ -65,6 +65,9 @@
             </thead>
             <tbody>
               <tr><td>Besvare henvendelse / gi tilbud</td><td>Art. 6(1)(b) – nødvendig for å oppfylle en avtale eller treffe tiltak på forespørsel</td></tr>
+              <tr><td>Opprette og administrere brukerkonto</td><td>Art. 6(1)(b) – nødvendig for å levere avtalt tjeneste</td></tr>
+              <tr><td>Sikker innlogging, sesjonshåndtering og tilgangskontroll</td><td>Art. 6(1)(f) – berettiget interesse i å beskytte systemer, data og brukerkontoer</td></tr>
+              <tr><td>Lagring av prosjektfiler og dokumentasjon i kundeportal</td><td>Art. 6(1)(b) – nødvendig for levering av tjenesten</td></tr>
               <tr><td>Arkivering av korrespondanse</td><td>Art. 6(1)(f) – berettiget interesse i å dokumentere forretningsrelasjoner</td></tr>
             </tbody>
           </table>
@@ -73,15 +76,19 @@
           <p>Vi deler ikke personopplysninger med tredjeparter for markedsføring eller andre kommersielle formål. Opplysningene deles kun i følgende tilfeller:</p>
           <ul>
             <li><strong>Formspree Inc.</strong> – skjemainnhold overføres via Formspree for å levere meldingen til vår e-postinnboks. Formspree opptrer som databehandler. Se <a href="https://formspree.io/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Formsprees personvernerklæring</a>.</li>
+            <li><strong>Hosting- og driftstjenester</strong> – tekniske leverandører som benyttes for drift av backend og database kan behandle opplysninger på våre vegne som databehandlere.</li>
             <li><strong>Lovpålagte krav</strong> – dersom vi er rettslig forpliktet til å utlevere opplysninger.</li>
           </ul>
-          <p>Overføring til Formspree (USA) er regulert av EUs standardkontraktsklausuler (SCC) i henhold til GDPR art. 46(2)(c).</p>
+          <p>Eventuelle overføringer til land utenfor EU/EØS skjer med gyldig overføringsgrunnlag, for eksempel EUs standardkontraktsklausuler (SCC), jf. GDPR art. 46.</p>
 
           <h2>5. Lagring og sletting</h2>
-          <p>Personopplysninger oppgitt via kontaktskjema lagres i vår e-postinnboks. Vi beholder opplysningene så lenge de er nødvendige for det angitte formålet, og senest:</p>
+          <p>Vi lagrer personopplysninger så lenge det er nødvendig for formålene over:</p>
           <ul>
-            <li><strong>Henvendelser uten avtale:</strong> inntil 12 måneder fra mottaksdato.</li>
-            <li><strong>Henvendelser som fører til oppdrag:</strong> i samsvar med norsk bokføringslov (5 år) og evt. lengre dersom faglig etterprøvbarhet krever det.</li>
+            <li><strong>Henvendelser uten avtale:</strong> normalt inntil 12 måneder fra mottaksdato.</li>
+            <li><strong>Kontoopplysninger:</strong> så lenge brukerkontoen er aktiv eller nødvendig for kundeforholdet.</li>
+            <li><strong>Sesjonsdata:</strong> aktiv sesjon utløper automatisk (normalt innen 8 timer uten fornyelse), og slettes fortløpende.</li>
+            <li><strong>Prosjekt- og filinformasjon:</strong> lagres i prosjektperioden og deretter så lenge det er nødvendig for dokumentasjon, avtaleoppfølging eller rettslige krav.</li>
+            <li><strong>Henvendelser som fører til oppdrag:</strong> i samsvar med norsk bokføringslov (5 år) og eventuelt lengre dersom faglig etterprøvbarhet krever det.</li>
           </ul>
 
           <h2>6. Dine rettigheter</h2>
@@ -99,7 +106,7 @@
           
 
           <h2>7. Sikkerhet</h2>
-          <p>Vi treffer tekniske og organisatoriske tiltak for å beskytte personopplysningene mot uautorisert tilgang, endring eller sletting. Kommunikasjon over nettsiden skjer via HTTPS.</p>
+          <p>Vi treffer tekniske og organisatoriske tiltak for å beskytte personopplysningene mot uautorisert tilgang, endring eller sletting. Eksempler på tiltak er passord-hashing, rollebasert tilgangskontroll, sesjonsbeskyttelse, CSRF-beskyttelse og kryptert overføring via HTTPS.</p>
 
           <h2>8. Endringer i erklæringen</h2>
           <p>Vi kan oppdatere denne erklæringen ved endringer i regelverket eller vår behandling. Siste oppdateringsdato fremgår øverst på siden. Vesentlige endringer vil varsles på nettsiden.</p>
