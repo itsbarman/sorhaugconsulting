@@ -13,6 +13,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import pg from 'pg';
+import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 dotenv.config();
@@ -32,6 +33,14 @@ const PORT = Number(process.env.PORT || 3000);
 const DATABASE_URL = process.env.DATABASE_URL;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const ASSET_SIGNING_SECRET = process.env.ASSET_SIGNING_SECRET;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'project-files';
+const STORAGE_PROVIDER = String(
+  process.env.STORAGE_PROVIDER || (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY ? 'supabase' : 'local')
+)
+  .trim()
+  .toLowerCase();
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrator';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
@@ -49,9 +58,24 @@ if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
   throw new Error('ADMIN_EMAIL og ADMIN_PASSWORD_HASH ma settes i .env');
 }
 
+if (!['local', 'supabase'].includes(STORAGE_PROVIDER)) {
+  throw new Error("STORAGE_PROVIDER ma vaere 'local' eller 'supabase'.");
+}
+
+if (STORAGE_PROVIDER === 'supabase' && (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY)) {
+  throw new Error('SUPABASE_URL og SUPABASE_SERVICE_ROLE_KEY ma settes nar STORAGE_PROVIDER=supabase.');
+}
+
 if (!fs.existsSync(PROTECTED_DIR)) {
   fs.mkdirSync(PROTECTED_DIR, { recursive: true });
 }
+
+const supabase =
+  STORAGE_PROVIDER === 'supabase'
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      })
+    : null;
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
@@ -212,11 +236,82 @@ const isAllowedUploadFile = (file) => {
 };
 
 const removeUploadedFiles = (files) => {
+  if (STORAGE_PROVIDER !== 'local') {
+    return;
+  }
+
   for (const file of files || []) {
     if (file?.path && fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }
   }
+};
+
+const toStorageObjectPath = ({ projectId, assetId, fileName }) => {
+  const safeName = sanitizeFileName(fileName || `${assetId}.bin`);
+  return `${projectId}/${assetId}/${safeName}`;
+};
+
+const uploadAssetToStorage = async ({ objectPath, file }) => {
+  if (STORAGE_PROVIDER === 'supabase') {
+    const { error } = await supabase.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .upload(objectPath, file.buffer, {
+        contentType: file.mimetype || 'application/octet-stream',
+        upsert: false
+      });
+
+    if (error) {
+      throw new Error(`Opplasting til Supabase feilet: ${error.message}`);
+    }
+    return;
+  }
+
+  const absolutePath = path.resolve(PROTECTED_DIR, objectPath);
+  if (!absolutePath.startsWith(PROTECTED_DIR)) {
+    throw new Error('Ugyldig filsti for lagring.');
+  }
+
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, file.buffer);
+};
+
+const removeAssetFromStorage = async (storedName) => {
+  if (!storedName) {
+    return;
+  }
+
+  if (STORAGE_PROVIDER === 'supabase') {
+    const { error } = await supabase.storage.from(SUPABASE_STORAGE_BUCKET).remove([storedName]);
+    if (error) {
+      throw new Error(`Klarte ikke slette fil fra Supabase: ${error.message}`);
+    }
+    return;
+  }
+
+  const absolutePath = path.resolve(PROTECTED_DIR, storedName);
+  if (absolutePath.startsWith(PROTECTED_DIR) && fs.existsSync(absolutePath)) {
+    fs.unlinkSync(absolutePath);
+  }
+};
+
+const readAssetFromStorage = async (storedName) => {
+  if (STORAGE_PROVIDER === 'supabase') {
+    const { data, error } = await supabase.storage.from(SUPABASE_STORAGE_BUCKET).download(storedName);
+    if (error || !data) {
+      return null;
+    }
+
+    const buffer = Buffer.from(await data.arrayBuffer());
+    return { buffer };
+  }
+
+  const absolutePath = path.resolve(PROTECTED_DIR, storedName);
+  if (!absolutePath.startsWith(PROTECTED_DIR) || !fs.existsSync(absolutePath)) {
+    return null;
+  }
+
+  return { absolutePath };
 };
 
 const randomId = (prefix) => `${prefix}_${crypto.randomBytes(8).toString('hex')}`;
@@ -426,13 +521,7 @@ app.use(
 app.use(express.json({ limit: '64kb' }));
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, PROTECTED_DIR),
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).slice(0, 15);
-      cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`);
-    }
-  }),
+  storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb) => {
     if (isAllowedUploadFile(file)) {
       cb(null, true);
@@ -799,16 +888,22 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
   archive.pipe(res);
 
   for (const asset of filteredAssets) {
-    const absolutePath = path.resolve(PROTECTED_DIR, asset.stored_name);
-    if (!absolutePath.startsWith(PROTECTED_DIR) || !fs.existsSync(absolutePath)) {
-      continue;
-    }
-
     const folderKey = detectAssetFolderKey(asset.file_name);
     const folderLabel = folderLabelFromKey(folderKey);
     const safeFileName = sanitizeFileName(asset.file_name);
     const zipPath = requestedFolder === 'all' ? `${folderLabel}/${safeFileName}` : safeFileName;
-    archive.file(absolutePath, { name: zipPath });
+
+    const storageResult = await readAssetFromStorage(asset.stored_name);
+    if (!storageResult) {
+      continue;
+    }
+
+    if (storageResult.buffer) {
+      archive.append(storageResult.buffer, { name: zipPath });
+      continue;
+    }
+
+    archive.file(storageResult.absolutePath, { name: zipPath });
   }
 
   archive.finalize();
@@ -849,12 +944,8 @@ app.get('/api/assets/:assetId', ensureAuthenticated, async (req, res) => {
     return res.status(403).json({ message: 'Ingen tilgang til ressursen.' });
   }
 
-  const absolutePath = path.resolve(PROTECTED_DIR, assetWithProject.stored_name);
-  if (!absolutePath.startsWith(PROTECTED_DIR)) {
-    return res.status(400).json({ message: 'Ugyldig filsti.' });
-  }
-
-  if (!fs.existsSync(absolutePath)) {
+  const storageResult = await readAssetFromStorage(assetWithProject.stored_name);
+  if (!storageResult) {
     return res.status(404).json({ message: 'Filen finnes ikke.' });
   }
 
@@ -864,7 +955,11 @@ app.get('/api/assets/:assetId', ensureAuthenticated, async (req, res) => {
     `inline; filename="${sanitizeFileName(assetWithProject.file_name)}"`
   );
 
-  return res.sendFile(absolutePath);
+  if (storageResult.buffer) {
+    return res.send(storageResult.buffer);
+  }
+
+  return res.sendFile(storageResult.absolutePath);
 });
 
 app.get('/api/admin/users', ensureAuthenticated, ensureAdmin, async (_req, res) => {
@@ -990,21 +1085,38 @@ app.post(
         : fallbackTitle || `Fil ${index + 1}`;
 
       const assetId = randomId('ast');
-      await dbRun(
-        `INSERT INTO assets
-        (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          assetId,
-          project.id,
-          computedTitle,
-          kind,
-          fileName,
-          file.filename,
-          file.mimetype || 'application/octet-stream',
-          file.size || 0
-        ]
-      );
+      const storedName = toStorageObjectPath({ projectId: project.id, assetId, fileName });
+
+      try {
+        await uploadAssetToStorage({ objectPath: storedName, file });
+      } catch (error) {
+        return res.status(500).json({ message: error.message || 'Klarte ikke lagre fil.' });
+      }
+
+      try {
+        await dbRun(
+          `INSERT INTO assets
+          (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            assetId,
+            project.id,
+            computedTitle,
+            kind,
+            fileName,
+            storedName,
+            file.mimetype || 'application/octet-stream',
+            file.size || 0
+          ]
+        );
+      } catch {
+        try {
+          await removeAssetFromStorage(storedName);
+        } catch {
+          // Ignorer sekundarfeil ved opprydding.
+        }
+        return res.status(500).json({ message: 'Klarte ikke registrere fil i databasen.' });
+      }
 
       createdAssets.push({ id: assetId, title: computedTitle, kind, fileName });
     }
@@ -1030,9 +1142,10 @@ app.delete('/api/admin/projects/:projectId/assets/:assetId', ensureAuthenticated
     return res.status(404).json({ message: 'Fant ikke filen i prosjektet.' });
   }
 
-  const absolutePath = path.resolve(PROTECTED_DIR, asset.stored_name);
-  if (absolutePath.startsWith(PROTECTED_DIR) && fs.existsSync(absolutePath)) {
-    fs.unlinkSync(absolutePath);
+  try {
+    await removeAssetFromStorage(asset.stored_name);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Klarte ikke slette fil.' });
   }
 
   await dbRun('DELETE FROM assets WHERE id = $1', [asset.id]);
