@@ -389,7 +389,6 @@ body.auth-portal {
 }
 
 .project-item button {
-  width: 100%;
   text-align: left;
   background: transparent;
   border: 0;
@@ -400,13 +399,14 @@ body.auth-portal {
 }
 
 .project-item__row {
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.5rem;
 }
 
 .project-item__open {
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
 }
 
@@ -421,9 +421,16 @@ body.auth-portal {
   margin-bottom: 0.2rem;
 }
 
+.project-item__open span {
+  display: block;
+  color: #4b5563;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .project-item__delete {
-  flex: 0 0 auto;
   width: auto;
+  min-width: 72px;
   border: 1px solid rgba(180, 35, 24, 0.35);
   background: rgba(180, 35, 24, 0.08);
   color: #b42318;
@@ -432,7 +439,9 @@ body.auth-portal {
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  align-self: center;
+  align-self: start;
+  text-align: center;
+  white-space: nowrap;
   transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
@@ -443,13 +452,13 @@ body.auth-portal {
   color: #ffffff;
 }
 
-.project-item button.active {
+.project-item__open.active {
   background: rgba(15, 63, 151, 0.1);
   border-radius: 8px;
   padding: 0.35rem;
 }
 
-.project-item button strong {
+.project-item__open strong {
   display: block;
   margin-bottom: 0.2rem;
 }
