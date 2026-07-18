@@ -60,7 +60,65 @@
           <h3 class="project-access-overview__title">Hvem har tilgang</h3>
           <ul id="projectAccessList" class="project-access-list"></ul>
         </section>
+
+        <section id="memberUploadSection" class="member-upload" hidden aria-label="Last opp filer til prosjektet">
+          <div class="member-upload__header">
+            <h3 class="member-upload__title">Last opp filer</h3>
+            <p class="member-upload__hint">Dra og slipp filer her eller velg dem manuelt. Maks 100 filer per opplasting, 20 MB per fil.</p>
+          </div>
+
+          <form id="memberUploadForm" class="member-upload__form" novalidate>
+            <label id="memberUploadDropzone" class="member-upload__dropzone" for="memberUploadFilesInput">
+              <span class="member-upload__dropzone-icon" aria-hidden="true"></span>
+              <span class="member-upload__dropzone-title">Slipp filer her</span>
+              <span class="member-upload__dropzone-hint">eller klikk for å velge fra maskinen</span>
+              <input
+                id="memberUploadFilesInput"
+                name="files"
+                type="file"
+                multiple
+                class="member-upload__input"
+                accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.xml,.txt,.csv,.doc,.docx,.docs,.xls,.xlsx,.ppt,.pptx,.zip,.json"
+              />
+            </label>
+
+            <div class="member-upload__meta">
+              <label class="member-upload__field">
+                <span>Kategori</span>
+                <select id="memberUploadKind" name="kind">
+                  <option value="dokument" selected>Dokument</option>
+                  <option value="rapport">Rapport</option>
+                  <option value="bilde">Bilde</option>
+                  <option value="leveranse">Leveranse</option>
+                </select>
+              </label>
+
+              <label class="member-upload__field">
+                <span>Tittel (valgfritt)</span>
+                <input id="memberUploadTitle" name="title" type="text" maxlength="120" placeholder="F.eks. Bilder befaring uke 24" />
+              </label>
+            </div>
+
+            <p id="memberUploadSummary" class="member-upload__summary" aria-live="polite">Ingen filer valgt.</p>
+            <ul id="memberUploadList" class="member-upload__list" hidden></ul>
+
+            <div class="member-upload__actions">
+              <button id="memberUploadSubmit" class="btn btn-small" type="submit" disabled>Last opp filer</button>
+              <button id="memberUploadClear" class="btn btn-small member-upload__clear" type="button" hidden>Tøm valg</button>
+            </div>
+            <p id="memberUploadMessage" class="auth-message member-upload__message" aria-live="polite"></p>
+          </form>
+        </section>
+
         <div id="assetDownloadActions" class="asset-download-actions" hidden></div>
+
+        <div id="assetFilterBar" class="asset-filter-bar" hidden role="tablist" aria-label="Filtrer filer etter opplaster">
+          <button type="button" class="asset-filter-tab active" data-filter="all" role="tab" aria-selected="true">Alle <span class="asset-filter-count" data-count-for="all">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="admin" role="tab" aria-selected="false">Fra admin <span class="asset-filter-count" data-count-for="admin">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="members" role="tab" aria-selected="false">Fra medlemmer <span class="asset-filter-count" data-count-for="members">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="mine" role="tab" aria-selected="false">Mine filer <span class="asset-filter-count" data-count-for="mine">0</span></button>
+        </div>
+
         <div id="assetFolders" class="asset-folders"></div>
         <section id="assetFolderContent" class="asset-folder-content" hidden>
           <h3 id="assetFolderTitle" class="asset-folder-content__title"></h3>

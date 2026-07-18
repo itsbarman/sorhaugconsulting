@@ -6,7 +6,10 @@
     activeProjectId: null,
     adminUsers: [],
     adminUsersLoaded: false,
-    adminUsersLoading: false
+    adminUsersLoading: false,
+    currentAssets: [],
+    assetFilter: 'all',
+    activeFolderName: null
   };
 
   const request = async (url, options = {}) => {
@@ -279,7 +282,20 @@
     const projectAccessOverview = document.getElementById('projectAccessOverview');
     const projectAccessList = document.getElementById('projectAccessList');
     const assetDownloadActions = document.getElementById('assetDownloadActions');
+    const assetFilterBar = document.getElementById('assetFilterBar');
     const logoutButton = document.getElementById('logoutButton');
+
+    const memberUploadSection = document.getElementById('memberUploadSection');
+    const memberUploadForm = document.getElementById('memberUploadForm');
+    const memberUploadDropzone = document.getElementById('memberUploadDropzone');
+    const memberUploadFilesInput = document.getElementById('memberUploadFilesInput');
+    const memberUploadTitle = document.getElementById('memberUploadTitle');
+    const memberUploadKind = document.getElementById('memberUploadKind');
+    const memberUploadSummary = document.getElementById('memberUploadSummary');
+    const memberUploadList = document.getElementById('memberUploadList');
+    const memberUploadSubmit = document.getElementById('memberUploadSubmit');
+    const memberUploadClear = document.getElementById('memberUploadClear');
+    const memberUploadMessage = document.getElementById('memberUploadMessage');
 
     const createProjectForm = document.getElementById('createProjectForm');
     const createProjectMembersToggle = document.getElementById('createProjectMembersToggle');
@@ -305,6 +321,7 @@
     const UPLOAD_MAX_FILE_SIZE = 20 * 1024 * 1024;
     const UPLOAD_MAX_FILES = 100;
     const pendingUploadFiles = [];
+    const pendingMemberUploadFiles = [];
     const ALLOWED_UPLOAD_EXTENSIONS = new Set([
       '.png',
       '.jpg',
@@ -335,6 +352,7 @@
       if (assetFolderTitle) {
         assetFolderTitle.textContent = '';
       }
+      state.activeFolderName = null;
     };
 
     const clearAssetFolders = () => {
@@ -352,6 +370,40 @@
 
       assetDownloadActions.innerHTML = '';
       assetDownloadActions.hidden = true;
+    };
+
+    const clearAssetFilterBar = () => {
+      if (!assetFilterBar) {
+        return;
+      }
+
+      assetFilterBar.hidden = true;
+      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
+        tab.classList.toggle('active', tab.dataset.filter === 'all');
+        tab.setAttribute('aria-selected', tab.dataset.filter === 'all' ? 'true' : 'false');
+      }
+      for (const counter of assetFilterBar.querySelectorAll('.asset-filter-count')) {
+        counter.textContent = '0';
+      }
+    };
+
+    const hideMemberUpload = () => {
+      if (!memberUploadSection) {
+        return;
+      }
+
+      memberUploadSection.hidden = true;
+      pendingMemberUploadFiles.length = 0;
+      renderMemberUploadSelection();
+      setMessage(memberUploadMessage, '');
+    };
+
+    const showMemberUpload = () => {
+      if (!memberUploadSection) {
+        return;
+      }
+
+      memberUploadSection.hidden = false;
     };
 
     const clearProjectAccess = () => {
@@ -432,6 +484,77 @@
       return { ok: true };
     };
 
+    const renderMemberUploadSelection = () => {
+      if (!memberUploadSummary || !memberUploadList) {
+        return;
+      }
+
+      const files = [...pendingMemberUploadFiles];
+      if (!files.length) {
+        memberUploadSummary.textContent = 'Ingen filer valgt.';
+        memberUploadList.innerHTML = '';
+        memberUploadList.hidden = true;
+        if (memberUploadSubmit) memberUploadSubmit.disabled = true;
+        if (memberUploadClear) memberUploadClear.hidden = true;
+        return;
+      }
+
+      const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
+      memberUploadSummary.textContent = `${files.length} fil(er) valgt, totalt ${formatBytes(totalSize)}.`;
+
+      memberUploadList.innerHTML = '';
+      const topFiles = files.slice(0, 12);
+      topFiles.forEach((file, index) => {
+        const item = document.createElement('li');
+        item.className = 'member-upload__list-item';
+
+        const info = document.createElement('div');
+        info.className = 'member-upload__list-info';
+
+        const name = document.createElement('span');
+        name.className = 'member-upload__list-name';
+        name.textContent = file.name;
+
+        const size = document.createElement('span');
+        size.className = 'member-upload__list-size';
+        size.textContent = formatBytes(file.size || 0);
+
+        info.append(name, size);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'member-upload__list-remove';
+        removeBtn.setAttribute('aria-label', `Fjern ${file.name} fra opplastingen`);
+        removeBtn.textContent = '\u00d7';
+        removeBtn.addEventListener('click', () => {
+          pendingMemberUploadFiles.splice(index, 1);
+          renderMemberUploadSelection();
+        });
+
+        item.append(info, removeBtn);
+        memberUploadList.appendChild(item);
+      });
+
+      if (files.length > topFiles.length) {
+        const more = document.createElement('li');
+        more.className = 'member-upload__list-more';
+        more.textContent = `+ ${files.length - topFiles.length} flere filer`;
+        memberUploadList.appendChild(more);
+      }
+
+      memberUploadList.hidden = false;
+      if (memberUploadClear) memberUploadClear.hidden = false;
+
+      const validation = validateUploadFiles(files);
+      if (memberUploadSubmit) memberUploadSubmit.disabled = !validation.ok;
+
+      if (!validation.ok) {
+        setMessage(memberUploadMessage, validation.message, true);
+      } else {
+        setMessage(memberUploadMessage, '');
+      }
+    };
+
     const renderUploadSelection = () => {
       if (!uploadSelectionSummary || !uploadSelectionList) {
         return;
@@ -474,15 +597,17 @@
       }
 
       const result = await request(
-        `/api/admin/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}`,
+        `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}`,
         { method: 'DELETE' }
       );
 
       if (!result.response.ok) {
+        setMessage(memberUploadMessage, result.payload?.message || 'Klarte ikke slette filen.', true);
         setMessage(adminMessage, result.payload?.message || 'Klarte ikke slette filen.', true);
         return;
       }
 
+      setMessage(memberUploadMessage, `Fil slettet: ${asset.fileName || asset.title}`);
       setMessage(adminMessage, `Fil slettet: ${asset.fileName || asset.title}`);
       await loadAssets(projectId);
     };
@@ -516,6 +641,105 @@
       'Andre filer': 'andre-filer'
     };
 
+    const relativeTimeFormatter =
+      typeof Intl !== 'undefined' && Intl.RelativeTimeFormat
+        ? new Intl.RelativeTimeFormat('no', { numeric: 'auto' })
+        : null;
+
+    const formatUploadedWhen = (isoString) => {
+      if (!isoString) return '';
+      const uploaded = new Date(isoString);
+      if (Number.isNaN(uploaded.getTime())) return '';
+
+      if (relativeTimeFormatter) {
+        const diffMs = uploaded.getTime() - Date.now();
+        const diffMinutes = Math.round(diffMs / (60 * 1000));
+        const absMinutes = Math.abs(diffMinutes);
+        if (absMinutes < 60) return relativeTimeFormatter.format(diffMinutes, 'minute');
+        const diffHours = Math.round(diffMs / (60 * 60 * 1000));
+        if (Math.abs(diffHours) < 24) return relativeTimeFormatter.format(diffHours, 'hour');
+        const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
+        if (Math.abs(diffDays) < 30) return relativeTimeFormatter.format(diffDays, 'day');
+      }
+
+      return uploaded.toLocaleDateString('no', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
+    const buildUploaderBadge = (asset) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'uploader-info';
+
+      const badge = document.createElement('span');
+      badge.className = 'uploader-badge';
+
+      const uploader = asset.uploader;
+      const currentUserId = state.user?.id;
+      const isOwn = Boolean(uploader?.id && currentUserId && uploader.id === currentUserId);
+
+      if (!uploader) {
+        badge.classList.add('uploader-badge--unknown');
+        badge.textContent = 'Ukjent opplaster';
+      } else if (isOwn) {
+        badge.classList.add('uploader-badge--own');
+        badge.textContent = uploader.role === 'admin' ? 'Lastet opp av deg (admin)' : 'Lastet opp av deg';
+      } else if (uploader.role === 'admin') {
+        badge.classList.add('uploader-badge--admin');
+        badge.textContent = `Admin - ${uploader.name || uploader.email || 'ukjent'}`;
+      } else {
+        badge.classList.add('uploader-badge--member');
+        badge.textContent = `Medlem - ${uploader.name || uploader.email || 'ukjent'}`;
+      }
+
+      wrapper.appendChild(badge);
+
+      const when = formatUploadedWhen(asset.createdAt);
+      if (when) {
+        const time = document.createElement('span');
+        time.className = 'uploader-time';
+        time.textContent = when;
+        wrapper.appendChild(time);
+      }
+
+      return wrapper;
+    };
+
+    const applyAssetFilter = (assets) => {
+      const filter = state.assetFilter;
+      if (filter === 'all') return assets;
+      if (filter === 'admin') return assets.filter((asset) => asset.uploader?.role === 'admin');
+      if (filter === 'members') return assets.filter((asset) => asset.uploader?.role === 'client');
+      if (filter === 'mine') return assets.filter((asset) => asset.uploader?.id && asset.uploader.id === state.user?.id);
+      return assets;
+    };
+
+    const updateAssetFilterCounts = (assets) => {
+      if (!assetFilterBar) return;
+
+      const counts = {
+        all: assets.length,
+        admin: assets.filter((asset) => asset.uploader?.role === 'admin').length,
+        members: assets.filter((asset) => asset.uploader?.role === 'client').length,
+        mine: assets.filter((asset) => asset.uploader?.id && asset.uploader.id === state.user?.id).length
+      };
+
+      for (const [key, value] of Object.entries(counts)) {
+        const counter = assetFilterBar.querySelector(`[data-count-for="${key}"]`);
+        if (counter) counter.textContent = String(value);
+      }
+    };
+
+    const setAssetFilter = (filter) => {
+      state.assetFilter = filter;
+      if (assetFilterBar) {
+        for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
+          const isActive = tab.dataset.filter === filter;
+          tab.classList.toggle('active', isActive);
+          tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        }
+      }
+      renderAssets(state.currentAssets, { preserveFilter: true });
+    };
+
     const renderDownloadActions = (projectId, orderedFolders) => {
       if (!assetDownloadActions || !projectId) {
         return;
@@ -544,19 +768,34 @@
       }
     };
 
-    const renderAssets = (assets) => {
+    const renderAssets = (assets, options = {}) => {
+      state.currentAssets = Array.isArray(assets) ? assets : [];
       clearAssets();
       clearAssetFolders();
       clearDownloadActions();
-      if (!assets.length) {
-        assetHint.textContent = 'Ingen ressurser tilgjengelig i prosjektet.';
+
+      if (!state.currentAssets.length) {
+        assetHint.textContent = 'Ingen ressurser tilgjengelig i prosjektet. Bruk opplastingsfeltet under for å legge til filer.';
+        if (assetFilterBar) assetFilterBar.hidden = true;
+        return;
+      }
+
+      if (assetFilterBar) {
+        assetFilterBar.hidden = false;
+        updateAssetFilterCounts(state.currentAssets);
+      }
+
+      const filteredAssets = applyAssetFilter(state.currentAssets);
+
+      if (!filteredAssets.length) {
+        assetHint.textContent = 'Ingen filer matcher valgt filter.';
         return;
       }
 
       assetHint.textContent = 'Velg en mappe for å vise filer.';
 
       const groupedAssets = new Map();
-      for (const asset of assets) {
+      for (const asset of filteredAssets) {
         const folderName = detectAssetFolder(asset);
         if (!groupedAssets.has(folderName)) {
           groupedAssets.set(folderName, []);
@@ -576,6 +815,7 @@
 
       const renderFolderItems = (folderName) => {
         clearAssets();
+        state.activeFolderName = folderName;
         if (assetFolderContent) {
           assetFolderContent.hidden = false;
         }
@@ -588,9 +828,15 @@
           const li = document.createElement('li');
           li.className = 'asset-item';
 
+          const header = document.createElement('div');
+          header.className = 'asset-item__header';
+
           const label = document.createElement('p');
+          label.className = 'asset-item__title';
           label.textContent = asset.title;
-          label.style.margin = '0 0 .35rem';
+
+          header.appendChild(label);
+          header.appendChild(buildUploaderBadge(asset));
 
           const meta = document.createElement('p');
           meta.className = 'asset-item__meta';
@@ -606,7 +852,7 @@
           actions.className = 'asset-item__actions';
           actions.appendChild(link);
 
-          if (state.user?.role === 'admin' && state.activeProjectId) {
+          if (asset.canDelete && state.activeProjectId) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
             deleteButton.className = 'btn btn-small asset-delete-btn';
@@ -617,11 +863,12 @@
             actions.appendChild(deleteButton);
           }
 
-          li.append(label, meta, actions);
+          li.append(header, meta, actions);
           assetList.appendChild(li);
         }
       };
 
+      let folderToOpen = null;
       for (const folderName of orderedFolders) {
         const folderButton = document.createElement('button');
         folderButton.type = 'button';
@@ -639,12 +886,23 @@
         });
 
         assetFolders?.appendChild(folderButton);
+
+        if (options.preserveFilter && state.activeFolderName === folderName) {
+          folderToOpen = folderButton;
+        }
+      }
+
+      if (folderToOpen) {
+        folderToOpen.classList.add('active');
+        renderFolderItems(state.activeFolderName);
       }
     };
 
     const loadAssets = async (projectId) => {
       assetHint.textContent = 'Laster ressurser...';
       clearAssets();
+      clearAssetFilterBar();
+      state.assetFilter = 'all';
 
       const { response, payload } = await request(`/api/projects/${encodeURIComponent(projectId)}/assets`);
       if (!response.ok) {
@@ -676,6 +934,8 @@
         projectList.appendChild(empty);
         assetHint.textContent = 'Ingen prosjekter tilgjengelig.';
         clearDownloadActions();
+        clearAssetFilterBar();
+        hideMemberUpload();
         return;
       }
 
@@ -683,7 +943,9 @@
       clearAssets();
       clearAssetFolders();
       clearDownloadActions();
+      clearAssetFilterBar();
       clearProjectAccess();
+      hideMemberUpload();
       assetHint.textContent = 'Klikk på et prosjekt i "Dine prosjekter" for å vise ressurser.';
 
       for (const project of projects) {
@@ -697,6 +959,8 @@
           state.activeProjectId = project.id;
           projectList.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
           button.classList.add('active');
+          hideMemberUpload();
+          showMemberUpload();
           await Promise.all([loadAssets(project.id), loadProjectAccess(project.id)]);
         });
 
@@ -1099,6 +1363,139 @@
       renderUploadSelection();
     };
 
+    const bootAssetFilters = () => {
+      if (!assetFilterBar) return;
+
+      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
+        tab.addEventListener('click', () => {
+          const filter = tab.dataset.filter || 'all';
+          setAssetFilter(filter);
+        });
+      }
+    };
+
+    const addMemberUploadFiles = (incoming) => {
+      if (!incoming?.length) return;
+
+      for (const file of incoming) {
+        const exists = pendingMemberUploadFiles.some(
+          (existing) =>
+            existing.name === file.name &&
+            existing.size === file.size &&
+            existing.lastModified === file.lastModified
+        );
+
+        if (!exists) {
+          pendingMemberUploadFiles.push(file);
+        }
+      }
+
+      renderMemberUploadSelection();
+    };
+
+    const bootMemberUpload = () => {
+      if (!memberUploadForm || !memberUploadFilesInput) return;
+
+      renderMemberUploadSelection();
+
+      memberUploadFilesInput.addEventListener('change', () => {
+        const picked = memberUploadFilesInput.files ? Array.from(memberUploadFilesInput.files) : [];
+        addMemberUploadFiles(picked);
+        memberUploadFilesInput.value = '';
+      });
+
+      if (memberUploadDropzone) {
+        const activate = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          memberUploadDropzone.classList.add('is-dragover');
+        };
+
+        const deactivate = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          memberUploadDropzone.classList.remove('is-dragover');
+        };
+
+        memberUploadDropzone.addEventListener('dragenter', activate);
+        memberUploadDropzone.addEventListener('dragover', activate);
+        memberUploadDropzone.addEventListener('dragleave', deactivate);
+        memberUploadDropzone.addEventListener('dragend', deactivate);
+        memberUploadDropzone.addEventListener('drop', (event) => {
+          deactivate(event);
+          const dropped = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
+          addMemberUploadFiles(dropped);
+        });
+      }
+
+      memberUploadClear?.addEventListener('click', () => {
+        pendingMemberUploadFiles.length = 0;
+        renderMemberUploadSelection();
+        setMessage(memberUploadMessage, '');
+      });
+
+      memberUploadForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (!state.activeProjectId) {
+          setMessage(memberUploadMessage, 'Velg et prosjekt før du laster opp.', true);
+          return;
+        }
+
+        const files = [...pendingMemberUploadFiles];
+        const validation = validateUploadFiles(files);
+        if (!validation.ok) {
+          setMessage(memberUploadMessage, validation.message, true);
+          return;
+        }
+
+        const submitButton = memberUploadSubmit;
+        if (submitButton instanceof HTMLButtonElement) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Laster opp...';
+        }
+
+        const formData = new FormData();
+        formData.append('title', String(memberUploadTitle?.value || '').trim());
+        formData.append('kind', String(memberUploadKind?.value || 'dokument'));
+        for (const file of files) {
+          formData.append('files', file, file.name);
+        }
+
+        try {
+          const { response, payload } = await request(
+            `/api/projects/${encodeURIComponent(state.activeProjectId)}/assets`,
+            { method: 'POST', body: formData }
+          );
+
+          if (!response.ok) {
+            setMessage(memberUploadMessage, payload?.message || 'Klarte ikke laste opp fil.', true);
+            return;
+          }
+
+          pendingMemberUploadFiles.length = 0;
+          if (memberUploadTitle) memberUploadTitle.value = '';
+          renderMemberUploadSelection();
+
+          const uploadedCount = Array.isArray(payload?.assets) ? payload.assets.length : payload?.count || 0;
+          if (uploadedCount === 1 && payload.assets?.[0]) {
+            setMessage(memberUploadMessage, `Fil lastet opp: ${payload.assets[0].fileName}`);
+          } else {
+            setMessage(memberUploadMessage, `${uploadedCount} filer lastet opp.`);
+          }
+
+          await loadAssets(state.activeProjectId);
+        } catch {
+          setMessage(memberUploadMessage, 'Nettverksfeil under opplasting.', true);
+        } finally {
+          if (submitButton instanceof HTMLButtonElement) {
+            submitButton.disabled = pendingMemberUploadFiles.length === 0;
+            submitButton.textContent = 'Last opp filer';
+          }
+        }
+      });
+    };
+
     const bootDashboard = async () => {
       const authenticated = await refreshSession();
       if (!authenticated) {
@@ -1107,6 +1504,8 @@
       }
 
       userInfo.textContent = `Innlogget som ${state.user.email} (${state.user.role})`;
+      bootMemberUpload();
+      bootAssetFilters();
       await loadProjects();
       bootAdmin();
     };

@@ -482,6 +482,9 @@ const initDb = async () => {
     )
   `);
 
+  await dbRun(`ALTER TABLE assets ADD COLUMN IF NOT EXISTS uploaded_by_user_id TEXT`);
+  await dbRun(`ALTER TABLE assets ADD COLUMN IF NOT EXISTS uploader_role TEXT`);
+
   const adminEmail = toUserEmail(ADMIN_EMAIL);
   const adminExisting = await dbGet('SELECT id FROM users WHERE email = $1', [adminEmail]);
   if (!adminExisting) {
@@ -653,12 +656,79 @@ const userHasProjectAccess = async (user, projectId) => {
 
 const getProjectAssets = async (projectId) =>
   dbAll(
-    `SELECT id, title, kind, file_name, stored_name, mime_type, size_bytes
-     FROM assets
-     WHERE project_id = $1
-     ORDER BY created_at DESC`,
+    `SELECT a.id, a.title, a.kind, a.file_name, a.stored_name, a.mime_type, a.size_bytes,
+            a.created_at, a.uploaded_by_user_id, a.uploader_role,
+            u.name AS uploader_name, u.email AS uploader_email
+     FROM assets a
+     LEFT JOIN users u ON u.id = a.uploaded_by_user_id
+     WHERE a.project_id = $1
+     ORDER BY a.created_at DESC`,
     [projectId]
   );
+
+const buildUploaderPayload = (asset) => {
+  if (!asset.uploaded_by_user_id && !asset.uploader_role) {
+    return null;
+  }
+
+  return {
+    id: asset.uploaded_by_user_id || null,
+    name: asset.uploader_name || null,
+    email: asset.uploader_email || null,
+    role: asset.uploader_role || null
+  };
+};
+
+const persistUploadedAssets = async ({ project, files, title, kind, uploader }) => {
+  const createdAssets = [];
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
+    const fileName = sanitizeFileName(file.originalname);
+    const fallbackTitle = stripExtension(fileName);
+    const computedTitle = title
+      ? files.length === 1
+        ? title
+        : `${title} - ${index + 1}`
+      : fallbackTitle || `Fil ${index + 1}`;
+
+    const assetId = randomId('ast');
+    const storedName = toStorageObjectPath({ projectId: project.id, assetId, fileName });
+
+    await uploadAssetToStorage({ objectPath: storedName, file });
+
+    try {
+      await dbRun(
+        `INSERT INTO assets
+        (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes,
+         uploaded_by_user_id, uploader_role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          assetId,
+          project.id,
+          computedTitle,
+          kind,
+          fileName,
+          storedName,
+          file.mimetype || 'application/octet-stream',
+          file.size || 0,
+          uploader?.id || null,
+          uploader?.role || null
+        ]
+      );
+    } catch (error) {
+      try {
+        await removeAssetFromStorage(storedName);
+      } catch {
+        // Ignorer sekundarfeil ved opprydding.
+      }
+      throw error;
+    }
+
+    createdAssets.push({ id: assetId, title: computedTitle, kind, fileName });
+  }
+
+  return createdAssets;
+};
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
@@ -769,19 +839,31 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
   }
 
   const assetsRaw = await getProjectAssets(project.id);
-  const assets = assetsRaw.map((asset) => ({
-    id: asset.id,
-    title: asset.title,
-    kind: asset.kind,
-    url: `/api/assets/${asset.id}?token=${createAssetToken({
-      assetId: asset.id,
-      userEmail: req.session.user.email
-    })}`,
-    fileName: asset.file_name,
-    sizeBytes: asset.size_bytes
-  }));
+  const currentUser = req.session.user;
+  const assets = assetsRaw.map((asset) => {
+    const uploader = buildUploaderPayload(asset);
+    const isOwner = Boolean(uploader?.id && uploader.id === currentUser.id);
+    return {
+      id: asset.id,
+      title: asset.title,
+      kind: asset.kind,
+      url: `/api/assets/${asset.id}?token=${createAssetToken({
+        assetId: asset.id,
+        userEmail: currentUser.email
+      })}`,
+      fileName: asset.file_name,
+      sizeBytes: asset.size_bytes,
+      createdAt: asset.created_at,
+      uploader,
+      canDelete: currentUser.role === 'admin' || isOwner
+    };
+  });
 
-  return res.json({ project: { id: project.id, name: project.name }, assets });
+  return res.json({
+    project: { id: project.id, name: project.name },
+    assets,
+    viewer: { id: currentUser.id, email: currentUser.email, role: currentUser.role }
+  });
 });
 
 app.get('/api/projects/:projectId/members', ensureAuthenticated, async (req, res) => {
@@ -1053,6 +1135,31 @@ app.post('/api/admin/projects/:projectId/members', ensureAuthenticated, ensureAd
   return res.status(201).json({ member: { id: user.id, email: user.email, name: user.name } });
 });
 
+const handleAssetUpload = async ({ req, res, project }) => {
+  const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+  if (!uploadedFiles.length) {
+    return res.status(400).json({ message: 'Du ma laste opp minst en fil.' });
+  }
+
+  const title = String(req.body.title || '').trim();
+  const kind = String(req.body.kind || 'dokument').trim().slice(0, 60) || 'dokument';
+
+  try {
+    const createdAssets = await persistUploadedAssets({
+      project,
+      files: uploadedFiles,
+      title,
+      kind,
+      uploader: req.session.user
+    });
+    return res.status(201).json({ assets: createdAssets, count: createdAssets.length });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error?.message || 'Klarte ikke lagre fil.' });
+  }
+};
+
 app.post(
   '/api/admin/projects/:projectId/assets',
   ensureAuthenticated,
@@ -1066,64 +1173,69 @@ app.post(
       return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
     }
 
-    if (!uploadedFiles.length) {
-      return res.status(400).json({ message: 'Du ma laste opp minst en fil.' });
-    }
-
-    const title = String(req.body.title || '').trim();
-    const kind = String(req.body.kind || 'dokument').trim().slice(0, 60) || 'dokument';
-
-    const createdAssets = [];
-    for (let index = 0; index < uploadedFiles.length; index += 1) {
-      const file = uploadedFiles[index];
-      const fileName = sanitizeFileName(file.originalname);
-      const fallbackTitle = stripExtension(fileName);
-      const computedTitle = title
-        ? uploadedFiles.length === 1
-          ? title
-          : `${title} - ${index + 1}`
-        : fallbackTitle || `Fil ${index + 1}`;
-
-      const assetId = randomId('ast');
-      const storedName = toStorageObjectPath({ projectId: project.id, assetId, fileName });
-
-      try {
-        await uploadAssetToStorage({ objectPath: storedName, file });
-      } catch (error) {
-        return res.status(500).json({ message: error.message || 'Klarte ikke lagre fil.' });
-      }
-
-      try {
-        await dbRun(
-          `INSERT INTO assets
-          (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [
-            assetId,
-            project.id,
-            computedTitle,
-            kind,
-            fileName,
-            storedName,
-            file.mimetype || 'application/octet-stream',
-            file.size || 0
-          ]
-        );
-      } catch {
-        try {
-          await removeAssetFromStorage(storedName);
-        } catch {
-          // Ignorer sekundarfeil ved opprydding.
-        }
-        return res.status(500).json({ message: 'Klarte ikke registrere fil i databasen.' });
-      }
-
-      createdAssets.push({ id: assetId, title: computedTitle, kind, fileName });
-    }
-
-    return res.status(201).json({ assets: createdAssets, count: createdAssets.length });
+    return handleAssetUpload({ req, res, project });
   }
 );
+
+app.post(
+  '/api/projects/:projectId/assets',
+  ensureAuthenticated,
+  upload.array('files', 100),
+  async (req, res) => {
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+    const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
+    if (!project) {
+      removeUploadedFiles(uploadedFiles);
+      return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
+    }
+
+    const hasAccess = await userHasProjectAccess(req.session.user, project.id);
+    if (!hasAccess) {
+      removeUploadedFiles(uploadedFiles);
+      return res.status(403).json({ message: 'Ingen tilgang til prosjektet.' });
+    }
+
+    return handleAssetUpload({ req, res, project });
+  }
+);
+
+app.delete('/api/projects/:projectId/assets/:assetId', ensureAuthenticated, async (req, res) => {
+  const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
+  if (!project) {
+    return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
+  }
+
+  const hasAccess = await userHasProjectAccess(req.session.user, project.id);
+  if (!hasAccess) {
+    return res.status(403).json({ message: 'Ingen tilgang til prosjektet.' });
+  }
+
+  const asset = await dbGet(
+    `SELECT id, project_id, stored_name, file_name, uploaded_by_user_id
+     FROM assets
+     WHERE id = $1`,
+    [req.params.assetId]
+  );
+
+  if (!asset || asset.project_id !== project.id) {
+    return res.status(404).json({ message: 'Fant ikke filen i prosjektet.' });
+  }
+
+  const isAdmin = req.session.user.role === 'admin';
+  const isOwner = asset.uploaded_by_user_id && asset.uploaded_by_user_id === req.session.user.id;
+  if (!isAdmin && !isOwner) {
+    return res.status(403).json({ message: 'Du kan bare slette filer du selv har lastet opp.' });
+  }
+
+  try {
+    await removeAssetFromStorage(asset.stored_name);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Klarte ikke slette fil.' });
+  }
+
+  await dbRun('DELETE FROM assets WHERE id = $1', [asset.id]);
+  return res.json({ ok: true, deleted: { id: asset.id, fileName: asset.file_name } });
+});
 
 app.delete('/api/admin/projects/:projectId/assets/:assetId', ensureAuthenticated, ensureAdmin, async (req, res) => {
   const project = await dbGet('SELECT id FROM projects WHERE id = $1', [req.params.projectId]);
