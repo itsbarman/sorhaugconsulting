@@ -157,30 +157,16 @@ const detectAssetFolderKey = (fileName) => {
   const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
 
   if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'bilder';
-  if (ext === '.pdf') return 'pdf';
-  if (['.doc', '.docx', '.docs', '.txt'].includes(ext)) return 'docs';
-  if (['.xls', '.xlsx', '.csv'].includes(ext)) return 'excel';
-  if (['.ppt', '.pptx'].includes(ext)) return 'powerpoint';
-  if (ext === '.xml') return 'xml';
-  if (ext === '.zip') return 'zip';
-  if (ext === '.json') return 'json';
   return 'andre-filer';
 };
 
 const folderLabelFromKey = (folderKey) => {
   const labels = {
     bilder: 'Bilder',
-    pdf: 'PDF',
-    docs: 'Docs',
-    excel: 'Excel',
-    powerpoint: 'PowerPoint',
-    xml: 'XML',
-    zip: 'ZIP',
-    json: 'JSON',
-    'andre-filer': 'Andre filer'
+    'andre-filer': 'Dokumenter'
   };
 
-  return labels[folderKey] || 'Andre filer';
+  return labels[folderKey] || 'Dokumenter';
 };
 
 const ALLOWED_FILE_EXTENSIONS = new Set([
@@ -914,13 +900,6 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
   const allowedFolders = new Set([
     'all',
     'bilder',
-    'pdf',
-    'docs',
-    'excel',
-    'powerpoint',
-    'xml',
-    'zip',
-    'json',
     'andre-filer'
   ]);
 
@@ -1031,11 +1010,20 @@ app.get('/api/assets/:assetId', ensureAuthenticated, async (req, res) => {
     return res.status(404).json({ message: 'Filen finnes ikke.' });
   }
 
-  res.setHeader('Content-Type', assetWithProject.mime_type || 'application/octet-stream');
-  res.setHeader(
-    'Content-Disposition',
-    `inline; filename="${sanitizeFileName(assetWithProject.file_name)}"`
-  );
+  const rawMime = String(assetWithProject.mime_type || 'application/octet-stream').toLowerCase();
+  const safeName = sanitizeFileName(assetWithProject.file_name);
+
+  // Bilder og PDF kan vises trygt i nettleseren. Alt annet (tekst, Word, Excel,
+  // ZIP osv.) lastes ned slik at det apnes i riktig program pa maskinen.
+  const isViewableInline = rawMime.startsWith('image/') || rawMime === 'application/pdf';
+  const forceDownload = String(req.query.download || '') === '1';
+  const disposition = !forceDownload && isViewableInline ? 'inline' : 'attachment';
+
+  // Legg pa tegnsett for tekstfiler slik at norske tegn ikke blir uleselige.
+  const contentType = rawMime.startsWith('text/') ? `${rawMime}; charset=utf-8` : rawMime;
+
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `${disposition}; filename="${safeName}"`);
 
   if (storageResult.buffer) {
     return res.send(storageResult.buffer);

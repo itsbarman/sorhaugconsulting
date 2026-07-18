@@ -419,7 +419,10 @@
       }
       if (open) {
         setAccessPanelOpen(false);
+        setResourceEmptyVisible(false);
         memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (state.activeProjectId && (!state.currentAssets || state.currentAssets.length === 0)) {
+        setResourceEmptyVisible(true);
       }
     };
 
@@ -672,28 +675,14 @@
       const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
 
       if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'Bilder';
-      if (ext === '.pdf') return 'PDF';
-      if (['.doc', '.docx', '.docs', '.txt'].includes(ext)) return 'Docs';
-      if (['.xls', '.xlsx', '.csv'].includes(ext)) return 'Excel';
-      if (['.ppt', '.pptx'].includes(ext)) return 'PowerPoint';
-      if (ext === '.xml') return 'XML';
-      if (ext === '.zip') return 'ZIP';
-      if (ext === '.json') return 'JSON';
-      return 'Andre filer';
+      return 'Dokumenter';
     };
 
-    const folderSortOrder = ['Bilder', 'PDF', 'Docs', 'Excel', 'PowerPoint', 'XML', 'ZIP', 'JSON', 'Andre filer'];
+    const folderSortOrder = ['Bilder', 'Dokumenter'];
 
     const folderKeyByName = {
       Bilder: 'bilder',
-      PDF: 'pdf',
-      Docs: 'docs',
-      Excel: 'excel',
-      PowerPoint: 'powerpoint',
-      XML: 'xml',
-      ZIP: 'zip',
-      JSON: 'json',
-      'Andre filer': 'andre-filer'
+      Dokumenter: 'andre-filer'
     };
 
     const relativeTimeFormatter =
@@ -908,12 +897,23 @@
           const actions = document.createElement('div');
           actions.className = 'asset-item__actions';
 
+          const iconType = fileIconKind(asset.fileName);
+          const isViewable = iconType === 'image' || iconType === 'pdf';
+
           const link = document.createElement('a');
-          link.href = asset.url;
-          link.target = '_blank';
-          link.rel = 'noopener';
           link.className = 'asset-item__open';
-          link.textContent = 'Åpne';
+          if (isViewable) {
+            link.href = asset.url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.textContent = 'Åpne';
+          } else {
+            // Dokumenter, regneark, tekst osv. lastes ned slik at de åpnes
+            // i riktig program på maskinen i stedet for uleselig råtekst.
+            // Ingen ny fane – nedlastingen skjer i bakgrunnen.
+            link.href = `${asset.url}&download=1`;
+            link.textContent = 'Last ned';
+          }
           actions.appendChild(link);
 
           if (asset.canDelete && state.activeProjectId) {
