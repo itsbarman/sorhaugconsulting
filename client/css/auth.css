@@ -2107,3 +2107,430 @@ body.auth-portal {
     align-items: flex-start;
   }
 }
+
+/* ============================================================
+   Enkel prosjektside – laget for brukere med lite erfaring
+   ============================================================ */
+
+.back-to-projects {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 48px;
+  padding: 0.6rem 1rem;
+  border: 2px solid rgba(15, 63, 151, 0.28);
+  background: #ffffff;
+  color: #0f3f97;
+  font-weight: 700;
+  font-size: 1.02rem;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.back-to-projects:hover,
+.back-to-projects:focus {
+  background: rgba(15, 63, 151, 0.08);
+  border-color: rgba(15, 63, 151, 0.5);
+}
+
+.project-view__name {
+  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  color: #0b1220;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.project-view__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.1rem;
+}
+
+.big-action {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 64px;
+  padding: 0.9rem 1.1rem;
+  border-radius: 14px;
+  border: 2px solid rgba(15, 63, 151, 0.25);
+  background: #ffffff;
+  color: #0b1220;
+  font-size: 1.12rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.06);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.big-action:hover,
+.big-action:focus {
+  transform: translateY(-2px);
+  border-color: rgba(15, 63, 151, 0.55);
+  box-shadow: 0 12px 24px rgba(15, 63, 151, 0.16);
+}
+
+.big-action:disabled {
+  cursor: default;
+  opacity: 0.75;
+  transform: none;
+  box-shadow: none;
+}
+
+.big-action--primary {
+  background: #0f3f97;
+  border-color: #0f3f97;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(15, 63, 151, 0.28);
+}
+
+.big-action--primary:hover,
+.big-action--primary:focus {
+  background: #0d357f;
+  border-color: #0d357f;
+}
+
+.big-action.is-open {
+  background: #0d357f;
+  border-color: #0d357f;
+  color: #ffffff;
+}
+
+.big-action__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(15, 63, 151, 0.12);
+  color: #0f3f97;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.big-action--primary .big-action__icon {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.big-action__icon[data-icon='upload']::before { content: '\2191'; }
+.big-action__icon[data-icon='download']::before { content: '\2193'; }
+
+.big-action__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Tilbakemelding etter en handling */
+.feedback-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.feedback-banner--success {
+  background: rgba(16, 122, 87, 0.12);
+  color: #0b5c44;
+  border-color: rgba(16, 122, 87, 0.3);
+}
+
+.feedback-banner--error {
+  background: rgba(180, 35, 24, 0.1);
+  color: #8f1c14;
+  border-color: rgba(180, 35, 24, 0.3);
+}
+
+.feedback-banner--info {
+  background: rgba(15, 63, 151, 0.1);
+  color: #0f3f97;
+  border-color: rgba(15, 63, 151, 0.3);
+}
+
+/* Filseksjoner */
+.file-section {
+  margin-top: 1.4rem;
+}
+
+.file-section__title {
+  margin: 0 0 0.7rem;
+  font-size: 1.2rem;
+  color: #0b1220;
+}
+
+.file-section__count {
+  color: #5d6a7f;
+  font-weight: 700;
+}
+
+.file-section__empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+.file-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+/* Ett filkort */
+.file-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.05);
+}
+
+.file-card__icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 58px;
+  position: relative;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+}
+
+.file-card__icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 14px 14px 0;
+  border-style: solid;
+  border-color: #cbd5e1 #f4f6fb;
+}
+
+.file-card__icon::after {
+  content: 'FIL';
+  position: absolute;
+  left: 0;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+}
+
+.file-card__icon[data-type='image']::after { content: 'BILDE'; background: #2f9e6b; }
+.file-card__icon[data-type='pdf']::after { content: 'PDF'; background: #c0392b; }
+.file-card__icon[data-type='doc']::after { content: 'DOK'; background: #2f6bd4; }
+.file-card__icon[data-type='sheet']::after { content: 'ARK'; background: #1f8f4e; }
+.file-card__icon[data-type='slides']::after { content: 'PPT'; background: #d1782b; }
+.file-card__icon[data-type='zip']::after { content: 'ZIP'; background: #6b4fb0; }
+.file-card__icon[data-type='file']::after { content: 'FIL'; background: #64748b; }
+
+.file-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.file-card__name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: #0b1220;
+  word-break: break-word;
+}
+
+.file-card__meta {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.file-card__size {
+  margin: 0;
+  color: #5d6a7f;
+  font-size: 0.9rem;
+}
+
+.file-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.file-btn--open {
+  background: #ffffff;
+  color: #0f3f97;
+  border-color: rgba(15, 63, 151, 0.4);
+}
+
+.file-btn--open:hover,
+.file-btn--open:focus {
+  background: rgba(15, 63, 151, 0.08);
+}
+
+.file-btn--download {
+  background: #0f3f97;
+  color: #ffffff;
+}
+
+.file-btn--download:hover,
+.file-btn--download:focus {
+  background: #0d357f;
+}
+
+/* Slett skal være mindre fremtredende enn Åpne/Last ned */
+.file-btn--delete {
+  background: #ffffff;
+  color: #8f1c14;
+  border-color: rgba(180, 35, 24, 0.35);
+  font-weight: 600;
+}
+
+.file-btn--delete:hover,
+.file-btn--delete:focus {
+  background: rgba(180, 35, 24, 0.08);
+}
+
+/* Bekreftelsesvindu for sletting */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.confirm-modal[hidden] {
+  display: none;
+}
+
+.confirm-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.confirm-modal__box {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 55px rgba(2, 6, 23, 0.3);
+}
+
+.confirm-modal__title {
+  margin: 0 0 0.6rem;
+  font-size: 1.25rem;
+  color: #0b1220;
+}
+
+.confirm-modal__text {
+  margin: 0 0 1.2rem;
+  color: #4b5563;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.confirm-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* «Behold filen» er det trygge, mest fremtredende valget */
+.confirm-modal__keep {
+  order: 0;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: #0f3f97;
+  color: #ffffff;
+  font-size: 1.08rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.confirm-modal__keep:hover,
+.confirm-modal__keep:focus {
+  background: #0d357f;
+}
+
+.confirm-modal__delete {
+  order: 1;
+  min-height: 48px;
+  border: 1px solid rgba(180, 35, 24, 0.4);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #8f1c14;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-modal__delete:hover,
+.confirm-modal__delete:focus {
+  background: rgba(180, 35, 24, 0.08);
+}
+
+/* Én tydelig visning av gangen: skjul prosjektlista når et prosjekt er åpent */
+.dashboard-page.has-open-project .dashboard-grid {
+  grid-template-columns: 1fr;
+}
+
+.dashboard-page.has-open-project .dashboard-grid > .panel:not(.resource-panel) {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .project-view__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .file-card {
+    align-items: flex-start;
+  }
+
+  .file-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

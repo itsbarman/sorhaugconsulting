@@ -274,34 +274,29 @@
     const adminMessage = document.getElementById('adminMessage');
 
     const projectList = document.getElementById('projectList');
-    const assetFolders = document.getElementById('assetFolders');
-    const assetFolderContent = document.getElementById('assetFolderContent');
-    const assetFolderTitle = document.getElementById('assetFolderTitle');
-    const assetList = document.getElementById('assetList');
     const assetHint = document.getElementById('assetHint');
-    const projectAccessOverview = document.getElementById('projectAccessOverview');
-    const projectAccessList = document.getElementById('projectAccessList');
-    const assetFilterBar = document.getElementById('assetFilterBar');
     const logoutButton = document.getElementById('logoutButton');
 
-    const explorerBody = document.getElementById('explorerBody');
-    const explorerPath = document.getElementById('explorerPath');
-    const explorerWindow = document.getElementById('explorerWindow');
-    const resourceToolbar = document.getElementById('resourceToolbar');
+    const projectView = document.getElementById('projectView');
+    const backToProjectsBtn = document.getElementById('backToProjectsBtn');
+    const projectViewName = document.getElementById('projectViewName');
+    const feedbackBanner = document.getElementById('feedbackBanner');
+
     const toolbarUploadBtn = document.getElementById('toolbarUploadBtn');
     const toolbarDownloadAllBtn = document.getElementById('toolbarDownloadAllBtn');
-    const toolbarAccessBtn = document.getElementById('toolbarAccessBtn');
-    const toolbarAccessCount = document.getElementById('toolbarAccessCount');
-    const resourceSummary = document.getElementById('resourceSummary');
-    const resourceEmpty = document.getElementById('resourceEmpty');
-    const resourceEmptyUploadBtn = document.getElementById('resourceEmptyUploadBtn');
-    const folderBackBtn = document.getElementById('folderBackBtn');
-    const folderDownloadBtn = document.getElementById('folderDownloadBtn');
-    const pathRootBtn = document.getElementById('pathRootBtn');
-    const pathSep = document.getElementById('pathSep');
-    const pathCurrent = document.getElementById('pathCurrent');
-    const accessCloseBtn = document.getElementById('accessCloseBtn');
     const uploadCloseBtn = document.getElementById('uploadCloseBtn');
+
+    const userFilesList = document.getElementById('userFilesList');
+    const userFilesCount = document.getElementById('userFilesCount');
+    const userFilesEmpty = document.getElementById('userFilesEmpty');
+    const adminFilesList = document.getElementById('adminFilesList');
+    const adminFilesCount = document.getElementById('adminFilesCount');
+    const adminFilesEmpty = document.getElementById('adminFilesEmpty');
+
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteModalText = document.getElementById('deleteModalText');
+    const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+    const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
 
     const memberUploadSection = document.getElementById('memberUploadSection');
     const memberUploadForm = document.getElementById('memberUploadForm');
@@ -362,61 +357,31 @@
       '.json'
     ]);
 
-    const clearAssets = () => {
-      assetList.innerHTML = '';
-      if (assetFolderContent) {
-        assetFolderContent.hidden = true;
+    // Tydelig tilbakemelding som ikke forsvinner for raskt.
+    let feedbackTimer = null;
+    const showFeedback = (text, type = 'success') => {
+      if (!feedbackBanner) return;
+      if (feedbackTimer) {
+        clearTimeout(feedbackTimer);
+        feedbackTimer = null;
       }
-      if (assetFolderTitle) {
-        assetFolderTitle.textContent = '';
+      feedbackBanner.textContent = text;
+      feedbackBanner.hidden = false;
+      feedbackBanner.classList.remove('feedback-banner--success', 'feedback-banner--error', 'feedback-banner--info');
+      feedbackBanner.classList.add(`feedback-banner--${type}`);
+      if (type !== 'error') {
+        feedbackTimer = setTimeout(() => {
+          feedbackBanner.hidden = true;
+        }, 8000);
       }
-      state.activeFolderName = null;
     };
 
-    const clearAssetFolders = () => {
-      if (!assetFolders) {
-        return;
+    const clearFeedback = () => {
+      if (feedbackTimer) {
+        clearTimeout(feedbackTimer);
+        feedbackTimer = null;
       }
-
-      assetFolders.innerHTML = '';
-    };
-
-    const clearDownloadActions = () => {
-      // Nedlastingsknapp er nå en del av verktoylinjen; ingen egen liste.
-    };
-
-    const setToolbarVisible = (visible) => {
-      if (explorerBody) explorerBody.hidden = !visible;
-    };
-
-    const setResourceSummary = () => {
-      // Sammendrag vises nå via adresselinjen; beholdt som no-op.
-    };
-
-    const setResourceEmptyVisible = (visible) => {
-      if (resourceEmpty) resourceEmpty.hidden = !visible;
-    };
-
-    // Viser/skjuler adresselinjen og selve filvinduet (mapper/filer/tomt).
-    // Brukes til å gi ETT fokusert steg når opplasting eller personer er åpne.
-    const setWindowChromeVisible = (visible) => {
-      if (explorerPath) explorerPath.hidden = !visible;
-      if (explorerWindow) explorerWindow.hidden = !visible;
-    };
-
-    const setBreadcrumb = (folderName) => {
-      if (!pathCurrent || !pathSep || !pathRootBtn) return;
-      if (folderName) {
-        pathSep.hidden = false;
-        pathCurrent.hidden = false;
-        pathCurrent.textContent = folderName;
-        pathRootBtn.classList.remove('is-current');
-      } else {
-        pathSep.hidden = true;
-        pathCurrent.hidden = true;
-        pathCurrent.textContent = '';
-        pathRootBtn.classList.add('is-current');
-      }
+      if (feedbackBanner) feedbackBanner.hidden = true;
     };
 
     const setUploadPanelOpen = (open) => {
@@ -427,39 +392,8 @@
         toolbarUploadBtn.classList.toggle('is-open', open);
       }
       if (open) {
-        // Kun opplasting synlig – skjul mapper/filer/tomt slik at det er
-        // umulig å bli forvirret av flere valg samtidig.
-        setAccessPanelOpen(false);
-        setWindowChromeVisible(false);
         memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        setWindowChromeVisible(true);
       }
-    };
-
-    const setAccessPanelOpen = (open) => {
-      if (!projectAccessOverview) return;
-      projectAccessOverview.hidden = !open;
-      if (toolbarAccessBtn) {
-        toolbarAccessBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-        toolbarAccessBtn.classList.toggle('is-open', open);
-      }
-      if (open) {
-        if (memberUploadSection) memberUploadSection.hidden = true;
-        if (toolbarUploadBtn) toolbarUploadBtn.classList.remove('is-open');
-        setWindowChromeVisible(false);
-        projectAccessOverview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        setWindowChromeVisible(true);
-      }
-    };
-
-    const clearAssetFilterBar = () => {
-      if (!assetFilterBar) {
-        return;
-      }
-
-      assetFilterBar.hidden = true;
     };
 
     const hideMemberUpload = () => {
@@ -473,58 +407,27 @@
       setMessage(memberUploadMessage, '');
     };
 
-    const showMemberUpload = () => {
-      setUploadPanelOpen(true);
+    // Åpner den enkle prosjektsiden og skjuler prosjektlista (spesielt viktig
+    // på mobil, slik at brukeren kun ser ett tydelig steg av gangen).
+    const openProjectView = (project) => {
+      if (projectViewName) projectViewName.textContent = project?.name || 'Prosjekt';
+      if (assetHint) assetHint.hidden = true;
+      if (projectView) projectView.hidden = false;
+      if (dashboardRoot) dashboardRoot.classList.add('has-open-project');
+      hideMemberUpload();
+      clearFeedback();
     };
 
-    const clearProjectAccess = () => {
-      if (!projectAccessOverview || !projectAccessList) {
-        return;
-      }
-
-      projectAccessList.innerHTML = '';
-      projectAccessOverview.hidden = true;
-      if (toolbarAccessCount) toolbarAccessCount.textContent = '0';
-      setAccessPanelOpen(false);
+    const closeProjectView = () => {
+      state.activeProjectId = null;
+      if (projectView) projectView.hidden = true;
+      if (assetHint) assetHint.hidden = false;
+      if (dashboardRoot) dashboardRoot.classList.remove('has-open-project');
+      hideMemberUpload();
+      clearFeedback();
+      projectList?.querySelectorAll('.project-item__open').forEach((item) => item.classList.remove('active'));
     };
 
-    const renderProjectAccess = (members = []) => {
-      if (!projectAccessOverview || !projectAccessList) {
-        return;
-      }
-
-      projectAccessList.innerHTML = '';
-
-      if (toolbarAccessCount) {
-        toolbarAccessCount.textContent = String(members.length);
-      }
-
-      if (!members.length) {
-        const empty = document.createElement('li');
-        empty.className = 'project-access-item project-access-item--empty';
-        empty.textContent = 'Ingen medlemmer er tildelt dette prosjektet enda.';
-        projectAccessList.appendChild(empty);
-        return;
-      }
-
-      for (const member of members) {
-        const item = document.createElement('li');
-        item.className = 'project-access-item';
-
-        const name = document.createElement('strong');
-        name.textContent = member.name || member.email;
-
-        const email = document.createElement('span');
-        email.textContent = member.email;
-
-        const role = document.createElement('span');
-        role.className = 'project-access-role';
-        role.textContent = member.role === 'admin' ? 'Admin-tilgang' : 'Prosjektmedlem';
-
-        item.append(name, email, role);
-        projectAccessList.appendChild(item);
-      }
-    };
 
     const getFileExtension = (fileName) => {
       const value = String(fileName || '').toLowerCase();
@@ -660,159 +563,6 @@
       uploadSelectionList.hidden = false;
     };
 
-    const deleteAsset = async (projectId, asset) => {
-      if (!projectId || !asset?.id) {
-        return;
-      }
-
-      const confirmed = window.confirm(`Slette filen ${asset.fileName || asset.title}?`);
-      if (!confirmed) {
-        return;
-      }
-
-      const result = await request(
-        `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}`,
-        { method: 'DELETE' }
-      );
-
-      if (!result.response.ok) {
-        setMessage(memberUploadMessage, result.payload?.message || 'Klarte ikke slette filen.', true);
-        setMessage(adminMessage, result.payload?.message || 'Klarte ikke slette filen.', true);
-        return;
-      }
-
-      setMessage(memberUploadMessage, `Fil slettet: ${asset.fileName || asset.title}`);
-      setMessage(adminMessage, `Fil slettet: ${asset.fileName || asset.title}`);
-      await loadAssets(projectId);
-    };
-
-    const detectAssetFolder = (asset) => {
-      const name = String(asset?.fileName || '').toLowerCase();
-      const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
-
-      if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'Bilder';
-      return 'Dokumenter';
-    };
-
-    const folderSortOrder = ['Bilder', 'Dokumenter'];
-
-    const folderKeyByName = {
-      Bilder: 'bilder',
-      Dokumenter: 'andre-filer'
-    };
-
-    const relativeTimeFormatter =
-      typeof Intl !== 'undefined' && Intl.RelativeTimeFormat
-        ? new Intl.RelativeTimeFormat('no', { numeric: 'auto' })
-        : null;
-
-    const formatUploadedWhen = (isoString) => {
-      if (!isoString) return '';
-      const uploaded = new Date(isoString);
-      if (Number.isNaN(uploaded.getTime())) return '';
-
-      if (relativeTimeFormatter) {
-        const diffMs = uploaded.getTime() - Date.now();
-        const diffMinutes = Math.round(diffMs / (60 * 1000));
-        const absMinutes = Math.abs(diffMinutes);
-        if (absMinutes < 60) return relativeTimeFormatter.format(diffMinutes, 'minute');
-        const diffHours = Math.round(diffMs / (60 * 60 * 1000));
-        if (Math.abs(diffHours) < 24) return relativeTimeFormatter.format(diffHours, 'hour');
-        const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
-        if (Math.abs(diffDays) < 30) return relativeTimeFormatter.format(diffDays, 'day');
-      }
-
-      return uploaded.toLocaleDateString('no', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
-
-    const buildUploaderBadge = (asset) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'uploader-info';
-
-      const badge = document.createElement('span');
-      badge.className = 'uploader-badge';
-
-      const uploader = asset.uploader;
-      const currentUserId = state.user?.id;
-      const isOwn = Boolean(uploader?.id && currentUserId && uploader.id === currentUserId);
-
-      if (!uploader) {
-        badge.classList.add('uploader-badge--unknown');
-        badge.textContent = 'Ukjent opplaster';
-      } else if (isOwn) {
-        badge.classList.add('uploader-badge--own');
-        badge.textContent = uploader.role === 'admin' ? 'Lastet opp av deg (admin)' : 'Lastet opp av deg';
-      } else if (uploader.role === 'admin') {
-        badge.classList.add('uploader-badge--admin');
-        badge.textContent = `Admin - ${uploader.name || uploader.email || 'ukjent'}`;
-      } else {
-        badge.classList.add('uploader-badge--member');
-        badge.textContent = `Medlem - ${uploader.name || uploader.email || 'ukjent'}`;
-      }
-
-      wrapper.appendChild(badge);
-
-      const when = formatUploadedWhen(asset.createdAt);
-      if (when) {
-        const time = document.createElement('span');
-        time.className = 'uploader-time';
-        time.textContent = when;
-        wrapper.appendChild(time);
-      }
-
-      return wrapper;
-    };
-
-    const applyAssetFilter = (assets) => {
-      const filter = state.assetFilter;
-      if (filter === 'all') return assets;
-      if (filter === 'admin') return assets.filter((asset) => asset.uploader?.role === 'admin');
-      if (filter === 'members') return assets.filter((asset) => asset.uploader?.role === 'client');
-      if (filter === 'mine') return assets.filter((asset) => asset.uploader?.id && asset.uploader.id === state.user?.id);
-      return assets;
-    };
-
-    const updateAssetFilterCounts = (assets) => {
-      if (!assetFilterBar) return;
-
-      const counts = {
-        all: assets.length,
-        admin: assets.filter((asset) => asset.uploader?.role === 'admin').length,
-        members: assets.filter((asset) => asset.uploader?.role === 'client').length,
-        mine: assets.filter((asset) => asset.uploader?.id && asset.uploader.id === state.user?.id).length
-      };
-
-      let visibleTabs = 0;
-      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
-        const key = tab.dataset.filter;
-        const value = counts[key] ?? 0;
-        const counter = tab.querySelector('.asset-filter-count');
-        if (counter) counter.textContent = String(value);
-        const shouldShow = key === 'all' || value > 0;
-        tab.hidden = !shouldShow;
-        if (shouldShow) visibleTabs += 1;
-      }
-
-      // Skjul hele filterlinjen om kun «Alle» finnes.
-      assetFilterBar.hidden = visibleTabs <= 1;
-    };
-
-    const setAssetFilter = (filter) => {
-      state.assetFilter = filter;
-      if (assetFilterBar) {
-        for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
-          const isActive = tab.dataset.filter === filter;
-          tab.classList.toggle('active', isActive);
-          tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        }
-      }
-      renderAssets(state.currentAssets, { preserveFilter: true });
-    };
-
-    const renderDownloadActions = () => {
-      // Nedlastingsknappen er nå en del av verktøylinjen. Beholdes som no-op av bakoverkompatibilitet.
-    };
-
     const fileIconKind = (fileName) => {
       const name = String(fileName || '').toLowerCase();
       const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
@@ -825,220 +575,169 @@
       return 'file';
     };
 
-    const closeFolderView = () => {
-      if (assetFolderContent) assetFolderContent.hidden = true;
-      if (assetList) assetList.innerHTML = '';
-      if (assetFolders) assetFolders.hidden = false;
-      state.activeFolderName = null;
-      setBreadcrumb(null);
-      assetFolders?.querySelectorAll('.explorer-folder').forEach((item) => item.classList.remove('active'));
+    // Lettlest dato: «18. juli 2026».
+    const formatUploadedDate = (isoString) => {
+      if (!isoString) return '';
+      const uploaded = new Date(isoString);
+      if (Number.isNaN(uploaded.getTime())) return '';
+      try {
+        return uploaded.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch {
+        return uploaded.toLocaleDateString('no', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
     };
 
-    const renderAssets = (assets, options = {}) => {
-      state.currentAssets = Array.isArray(assets) ? assets : [];
-      clearAssets();
-      clearAssetFolders();
+    // ---- Trygg sletting via bekreftelsesvindu ----
+    const openDeleteModal = (projectId, asset) => {
+      state.pendingDelete = { projectId, asset };
+      const shownName = asset.fileName || asset.title || 'denne filen';
+      if (deleteModalText) deleteModalText.textContent = `Filen «${shownName}» blir slettet for godt.`;
+      if (deleteModal) deleteModal.hidden = false;
+      deleteCancelBtn?.focus();
+    };
 
-      // Ingen filer i prosjektet enda.
-      if (!state.currentAssets.length) {
-        assetHint.textContent = '';
-        if (assetFolders) assetFolders.hidden = true;
-        if (assetFolderContent) assetFolderContent.hidden = true;
-        setBreadcrumb(null);
-        setResourceEmptyVisible(true);
+    const closeDeleteModal = () => {
+      state.pendingDelete = null;
+      if (deleteModal) deleteModal.hidden = true;
+    };
+
+    const performDelete = async () => {
+      const pending = state.pendingDelete;
+      if (!pending?.projectId || !pending?.asset?.id) {
+        closeDeleteModal();
+        return;
+      }
+      const { projectId, asset } = pending;
+      closeDeleteModal();
+
+      const result = await request(
+        `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(asset.id)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!result.response.ok) {
+        showFeedback('Noe gikk galt. Prøv igjen.', 'error');
         return;
       }
 
-      setResourceEmptyVisible(false);
-      if (assetFolders) assetFolders.hidden = false;
+      showFeedback('Filen ble slettet.', 'success');
+      await loadAssets(projectId);
+    };
 
-      const groupedAssets = new Map();
-      for (const asset of state.currentAssets) {
-        const folderName = detectAssetFolder(asset);
-        if (!groupedAssets.has(folderName)) {
-          groupedAssets.set(folderName, []);
-        }
-        groupedAssets.get(folderName).push(asset);
+    // ---- Filkort ----
+    const buildFileCard = (asset) => {
+      const li = document.createElement('li');
+      li.className = 'file-card';
+
+      const icon = document.createElement('span');
+      icon.className = 'file-card__icon';
+      icon.dataset.type = fileIconKind(asset.fileName);
+      icon.setAttribute('aria-hidden', 'true');
+
+      const body = document.createElement('div');
+      body.className = 'file-card__body';
+
+      const name = document.createElement('p');
+      name.className = 'file-card__name';
+      name.textContent = asset.fileName || asset.title || 'Fil';
+
+      const meta = document.createElement('p');
+      meta.className = 'file-card__meta';
+      const date = formatUploadedDate(asset.uploadedAt || asset.createdAt);
+      const who = asset.uploadedByName || 'Ukjent';
+      meta.textContent = date ? `Lastet opp ${date} av ${who}` : `Lastet opp av ${who}`;
+
+      const size = document.createElement('p');
+      size.className = 'file-card__size';
+      size.textContent = formatBytes(asset.sizeBytes);
+
+      const actions = document.createElement('div');
+      actions.className = 'file-card__actions';
+
+      const iconType = fileIconKind(asset.fileName);
+      const isViewable = iconType === 'image' || iconType === 'pdf';
+
+      if (isViewable) {
+        const openLink = document.createElement('a');
+        openLink.className = 'file-btn file-btn--open';
+        openLink.href = asset.url;
+        openLink.target = '_blank';
+        openLink.rel = 'noopener';
+        openLink.innerHTML = '<span aria-hidden="true">👁</span> Åpne';
+        actions.appendChild(openLink);
       }
 
-      const orderedFolders = [...groupedAssets.keys()].sort((a, b) => {
-        const aIndex = folderSortOrder.indexOf(a);
-        const bIndex = folderSortOrder.indexOf(b);
-        const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
-        const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
-        return aRank - bRank;
-      });
+      const downloadLink = document.createElement('a');
+      downloadLink.className = 'file-btn file-btn--download';
+      downloadLink.href = `${asset.url}&download=1`;
+      downloadLink.innerHTML = '<span aria-hidden="true">⬇</span> Last ned';
+      actions.appendChild(downloadLink);
 
-      assetHint.textContent = '';
-
-      const renderFolderItems = (folderName) => {
-        clearAssets();
-        state.activeFolderName = folderName;
-        setResourceEmptyVisible(false);
-        if (assetFolders) assetFolders.hidden = true;
-        if (assetFolderContent) assetFolderContent.hidden = false;
-        setBreadcrumb(folderName);
-
-        const count = (groupedAssets.get(folderName) || []).length;
-        if (assetFolderTitle) {
-          assetFolderTitle.textContent = `${folderName} — ${count} ${count === 1 ? 'fil' : 'filer'}`;
-        }
-
-        const selectedAssets = groupedAssets.get(folderName) || [];
-        for (const asset of selectedAssets) {
-          const li = document.createElement('li');
-          li.className = 'asset-item';
-
-          const icon = document.createElement('span');
-          icon.className = 'asset-item__icon';
-          icon.dataset.type = fileIconKind(asset.fileName);
-          icon.setAttribute('aria-hidden', 'true');
-
-          const body = document.createElement('div');
-          body.className = 'asset-item__body';
-
-          const header = document.createElement('div');
-          header.className = 'asset-item__header';
-
-          const label = document.createElement('p');
-          label.className = 'asset-item__title';
-          label.textContent = asset.title;
-
-          header.appendChild(label);
-          header.appendChild(buildUploaderBadge(asset));
-
-          const meta = document.createElement('p');
-          meta.className = 'asset-item__meta';
-          meta.textContent = `${asset.fileName} · ${formatBytes(asset.sizeBytes)}`;
-
-          const actions = document.createElement('div');
-          actions.className = 'asset-item__actions';
-
-          const iconType = fileIconKind(asset.fileName);
-          const isViewable = iconType === 'image' || iconType === 'pdf';
-
-          const link = document.createElement('a');
-          link.className = 'asset-item__open';
-          if (isViewable) {
-            link.href = asset.url;
-            link.target = '_blank';
-            link.rel = 'noopener';
-            link.textContent = 'Åpne';
-          } else {
-            // Dokumenter, regneark, tekst osv. lastes ned slik at de åpnes
-            // i riktig program på maskinen i stedet for uleselig råtekst.
-            // Ingen ny fane – nedlastingen skjer i bakgrunnen.
-            link.href = `${asset.url}&download=1`;
-            link.textContent = 'Last ned';
-          }
-          actions.appendChild(link);
-
-          if (asset.canDelete && state.activeProjectId) {
-            const deleteButton = document.createElement('button');
-            deleteButton.type = 'button';
-            deleteButton.className = 'btn btn-small asset-delete-btn';
-            deleteButton.textContent = 'Slett';
-            deleteButton.addEventListener('click', () => {
-              deleteAsset(state.activeProjectId, asset);
-            });
-            actions.appendChild(deleteButton);
-          }
-
-          body.append(header, meta, actions);
-          li.append(icon, body);
-          assetList.appendChild(li);
-        }
-      };
-
-      state.openFolderByName = renderFolderItems;
-
-      let folderToOpen = null;
-      for (const folderName of orderedFolders) {
-        const count = (groupedAssets.get(folderName) || []).length;
-        const folderButton = document.createElement('button');
-        folderButton.type = 'button';
-        folderButton.className = 'explorer-folder';
-        folderButton.innerHTML = `
-          <span class="explorer-folder__icon" aria-hidden="true"></span>
-          <span class="explorer-folder__name">${folderName}</span>
-          <span class="explorer-folder__count">${count} ${count === 1 ? 'fil' : 'filer'}</span>
-        `;
-
-        folderButton.addEventListener('click', () => {
-          renderFolderItems(folderName);
+      if (asset.canDelete && state.activeProjectId) {
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'file-btn file-btn--delete';
+        deleteButton.innerHTML = '<span aria-hidden="true">🗑</span> Slett';
+        deleteButton.addEventListener('click', () => {
+          openDeleteModal(state.activeProjectId, asset);
         });
-
-        assetFolders?.appendChild(folderButton);
-
-        if (options.preserveFilter && state.activeFolderName === folderName) {
-          folderToOpen = folderName;
-        }
+        actions.appendChild(deleteButton);
       }
 
-      if (folderToOpen) {
-        renderFolderItems(folderToOpen);
-      } else {
-        setBreadcrumb(null);
+      body.append(name, meta, size, actions);
+      li.append(icon, body);
+      return li;
+    };
+
+    const renderFileSection = (listEl, countEl, emptyEl, files) => {
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      if (countEl) countEl.textContent = `(${files.length})`;
+
+      if (!files.length) {
+        if (emptyEl) emptyEl.hidden = false;
+        listEl.hidden = true;
+        return;
       }
+
+      if (emptyEl) emptyEl.hidden = true;
+      listEl.hidden = false;
+      for (const asset of files) {
+        listEl.appendChild(buildFileCard(asset));
+      }
+    };
+
+    const renderFiles = (assets) => {
+      state.currentAssets = Array.isArray(assets) ? assets : [];
+      const userFiles = state.currentAssets.filter((asset) => asset.uploadedByType === 'USER');
+      const adminFiles = state.currentAssets.filter((asset) => asset.uploadedByType === 'ADMIN');
+      renderFileSection(userFilesList, userFilesCount, userFilesEmpty, userFiles);
+      renderFileSection(adminFilesList, adminFilesCount, adminFilesEmpty, adminFiles);
     };
 
     const loadAssets = async (projectId) => {
-      assetHint.textContent = 'Laster filer...';
-      setResourceSummary('');
-      setResourceEmptyVisible(false);
-      clearAssets();
-      clearAssetFilterBar();
-      state.assetFilter = 'all';
-
       const { response, payload } = await request(`/api/projects/${encodeURIComponent(projectId)}/assets`);
       if (!response.ok) {
-        assetHint.textContent = payload?.message || 'Klarte ikke hente filene.';
+        showFeedback('Noe gikk galt. Prøv igjen.', 'error');
+        renderFiles([]);
         return;
       }
-
-      renderAssets(payload.assets || []);
-    };
-
-    const loadProjectAccess = async (projectId) => {
-      clearProjectAccess();
-
-      const { response, payload } = await request(`/api/projects/${encodeURIComponent(projectId)}/members`);
-      if (!response.ok) {
-        return;
-      }
-
-      renderProjectAccess(payload.members || []);
+      renderFiles(payload.assets || []);
     };
 
     const renderProjects = (projects) => {
       state.projects = projects;
       projectList.innerHTML = '';
+
       if (!projects.length) {
         const empty = document.createElement('li');
         empty.className = 'project-item';
         empty.textContent = 'Du har foreløpig ingen tildelte prosjekter.';
         projectList.appendChild(empty);
-        assetHint.textContent = 'Du har ingen prosjekter enda. Kontakt Sorhaug Consulting hvis du forventer tilgang.';
-        setResourceSummary('');
-        setResourceEmptyVisible(false);
-        setToolbarVisible(false);
-        clearDownloadActions();
-        clearAssetFilterBar();
-        hideMemberUpload();
+        if (assetHint) assetHint.textContent = 'Du har ingen prosjekter enda. Kontakt Sørhaug Consulting hvis du forventer tilgang.';
+        closeProjectView();
         return;
       }
-
-      state.activeProjectId = null;
-      clearAssets();
-      clearAssetFolders();
-      clearDownloadActions();
-      clearAssetFilterBar();
-      clearProjectAccess();
-      hideMemberUpload();
-      setToolbarVisible(false);
-      setResourceEmptyVisible(false);
-      setResourceSummary('');
-      assetHint.textContent = 'Trykk på et prosjekt til venstre for å se filene.';
 
       for (const project of projects) {
         const li = document.createElement('li');
@@ -1055,13 +754,8 @@
           state.activeProjectId = project.id;
           projectList.querySelectorAll('.project-item__open').forEach((item) => item.classList.remove('active'));
           button.classList.add('active');
-          hideMemberUpload();
-          setAccessPanelOpen(false);
-          closeFolderView();
-          setToolbarVisible(true);
-          setResourceEmptyVisible(false);
-          assetHint.textContent = 'Laster filer...';
-          await Promise.all([loadAssets(project.id), loadProjectAccess(project.id)]);
+          openProjectView(project);
+          await loadAssets(project.id);
         });
 
         row.appendChild(button);
@@ -1114,17 +808,7 @@
       }
 
       if (state.activeProjectId === project.id) {
-        state.activeProjectId = null;
-        clearAssets();
-        clearAssetFolders();
-        clearDownloadActions();
-        clearAssetFilterBar();
-        clearProjectAccess();
-        hideMemberUpload();
-        setToolbarVisible(false);
-        setResourceEmptyVisible(false);
-        setResourceSummary('');
-        assetHint.textContent = 'Prosjektet er slettet. Velg et annet prosjekt.';
+        closeProjectView();
       }
 
       const assetCount = payload?.deleted?.assetCount ?? 0;
@@ -1528,15 +1212,24 @@
       renderUploadSelection();
     };
 
-    const bootAssetFilters = () => {
-      if (!assetFilterBar) return;
+    const bootDeleteModal = () => {
+      deleteCancelBtn?.addEventListener('click', () => closeDeleteModal());
+      deleteConfirmBtn?.addEventListener('click', () => performDelete());
 
-      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
-        tab.addEventListener('click', () => {
-          const filter = tab.dataset.filter || 'all';
-          setAssetFilter(filter);
+      if (deleteModal) {
+        deleteModal.addEventListener('click', (event) => {
+          const target = event.target;
+          if (target instanceof HTMLElement && target.dataset.close === 'delete') {
+            closeDeleteModal();
+          }
         });
       }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && deleteModal && !deleteModal.hidden) {
+          closeDeleteModal();
+        }
+      });
     };
 
     const addMemberUploadFiles = (incoming) => {
@@ -1617,12 +1310,11 @@
         const submitButton = memberUploadSubmit;
         if (submitButton instanceof HTMLButtonElement) {
           submitButton.disabled = true;
-          submitButton.textContent = 'Laster opp...';
+          submitButton.textContent = files.length === 1 ? 'Laster opp filen …' : 'Laster opp filene …';
         }
+        setMessage(memberUploadMessage, files.length === 1 ? 'Laster opp filen …' : 'Laster opp filene …');
 
         const formData = new FormData();
-        formData.append('title', String(memberUploadTitle?.value || '').trim());
-        formData.append('kind', String(memberUploadKind?.value || 'dokument'));
         for (const file of files) {
           formData.append('files', file, file.name);
         }
@@ -1634,25 +1326,21 @@
           );
 
           if (!response.ok) {
-            setMessage(memberUploadMessage, payload?.message || 'Klarte ikke laste opp fil.', true);
+            setMessage(memberUploadMessage, 'Filen kunne ikke lastes opp. Prøv igjen.', true);
             return;
           }
 
           pendingMemberUploadFiles.length = 0;
-          if (memberUploadTitle) memberUploadTitle.value = '';
           renderMemberUploadSelection();
+          setMessage(memberUploadMessage, '');
 
           const uploadedCount = Array.isArray(payload?.assets) ? payload.assets.length : payload?.count || 0;
-          if (uploadedCount === 1 && payload.assets?.[0]) {
-            setMessage(memberUploadMessage, `Fil lastet opp: ${payload.assets[0].fileName}`);
-          } else {
-            setMessage(memberUploadMessage, `${uploadedCount} filer lastet opp.`);
-          }
 
           await loadAssets(state.activeProjectId);
           setUploadPanelOpen(false);
+          showFeedback(uploadedCount === 1 ? 'Filen ble lastet opp.' : 'Filene ble lastet opp.', 'success');
         } catch {
-          setMessage(memberUploadMessage, 'Nettverksfeil under opplasting.', true);
+          setMessage(memberUploadMessage, 'Filen kunne ikke lastes opp. Prøv igjen.', true);
         } finally {
           if (submitButton instanceof HTMLButtonElement) {
             submitButton.disabled = pendingMemberUploadFiles.length === 0;
@@ -1670,57 +1358,50 @@
         });
       }
 
-      if (toolbarAccessBtn) {
-        toolbarAccessBtn.addEventListener('click', () => {
-          const isOpen = projectAccessOverview && !projectAccessOverview.hidden;
-          setAccessPanelOpen(!isOpen);
-        });
-      }
-
       if (toolbarDownloadAllBtn) {
-        toolbarDownloadAllBtn.addEventListener('click', () => {
+        toolbarDownloadAllBtn.addEventListener('click', async () => {
           if (!state.activeProjectId) return;
-          const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download?folder=all`;
-          window.open(url, '_blank', 'noopener');
-        });
-      }
+          if (toolbarDownloadAllBtn.dataset.busy === '1') return;
 
-      if (resourceEmptyUploadBtn) {
-        resourceEmptyUploadBtn.addEventListener('click', () => {
-          setUploadPanelOpen(true);
-        });
-      }
+          const labelEl = toolbarDownloadAllBtn.querySelector('.big-action__label');
+          const originalLabel = labelEl ? labelEl.textContent : '';
+          toolbarDownloadAllBtn.dataset.busy = '1';
+          toolbarDownloadAllBtn.disabled = true;
+          if (labelEl) labelEl.textContent = 'Gjør prosjektet klart for nedlasting …';
 
-      if (folderBackBtn) {
-        folderBackBtn.addEventListener('click', () => {
-          closeFolderView();
-        });
-      }
-
-      if (folderDownloadBtn) {
-        folderDownloadBtn.addEventListener('click', () => {
-          if (!state.activeProjectId || !state.activeFolderName) return;
-          const folderKey = folderKeyByName[state.activeFolderName] || 'andre-filer';
-          const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download?folder=${encodeURIComponent(folderKey)}`;
-          window.open(url, '_blank', 'noopener');
-        });
-      }
-
-      if (pathRootBtn) {
-        pathRootBtn.addEventListener('click', () => {
-          closeFolderView();
-        });
-      }
-
-      if (accessCloseBtn) {
-        accessCloseBtn.addEventListener('click', () => {
-          setAccessPanelOpen(false);
+          try {
+            const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download`;
+            // Naviger til nedlastings-URL-en i et skjult element slik at
+            // nettleseren starter nedlastingen uten å bytte side.
+            const link = document.createElement('a');
+            link.href = url;
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showFeedback('Prosjektet lastes ned.', 'success');
+          } catch {
+            showFeedback('Prosjektet kunne ikke lastes ned. Prøv igjen.', 'error');
+          } finally {
+            // Gi nedlastingen et øyeblikk før knappen tilbakestilles.
+            setTimeout(() => {
+              toolbarDownloadAllBtn.dataset.busy = '0';
+              toolbarDownloadAllBtn.disabled = false;
+              if (labelEl) labelEl.textContent = originalLabel || 'Last ned hele prosjektet';
+            }, 1500);
+          }
         });
       }
 
       if (uploadCloseBtn) {
         uploadCloseBtn.addEventListener('click', () => {
           setUploadPanelOpen(false);
+        });
+      }
+
+      if (backToProjectsBtn) {
+        backToProjectsBtn.addEventListener('click', () => {
+          closeProjectView();
         });
       }
     };
@@ -1742,8 +1423,8 @@
 
       userInfo.textContent = buildGreeting(state.user);
       bootMemberUpload();
-      bootAssetFilters();
       bootResourceToolbar();
+      bootDeleteModal();
       await loadProjects();
       bootAdmin();
     };

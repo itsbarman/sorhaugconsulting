@@ -470,6 +470,17 @@ const initDb = async () => {
 
   await dbRun(`ALTER TABLE assets ADD COLUMN IF NOT EXISTS uploaded_by_user_id TEXT`);
   await dbRun(`ALTER TABLE assets ADD COLUMN IF NOT EXISTS uploader_role TEXT`);
+  await dbRun(`ALTER TABLE assets ADD COLUMN IF NOT EXISTS uploaded_by_name TEXT`);
+
+  // Trygg backfill: fyll inn opplasternavn for eldre filer der vi kan finne
+  // brukeren via uploaded_by_user_id. Ingen data slettes eller endres ellers.
+  await dbRun(`
+    UPDATE assets a
+    SET uploaded_by_name = u.name
+    FROM users u
+    WHERE a.uploaded_by_user_id = u.id
+      AND (a.uploaded_by_name IS NULL OR a.uploaded_by_name = '')
+  `);
 
   const adminEmail = toUserEmail(ADMIN_EMAIL);
   const adminExisting = await dbGet('SELECT id FROM users WHERE email = $1', [adminEmail]);
@@ -643,7 +654,7 @@ const userHasProjectAccess = async (user, projectId) => {
 const getProjectAssets = async (projectId) =>
   dbAll(
     `SELECT a.id, a.title, a.kind, a.file_name, a.stored_name, a.mime_type, a.size_bytes,
-            a.created_at, a.uploaded_by_user_id, a.uploader_role,
+            a.created_at, a.uploaded_by_user_id, a.uploader_role, a.uploaded_by_name,
             u.name AS uploader_name, u.email AS uploader_email
      FROM assets a
      LEFT JOIN users u ON u.id = a.uploaded_by_user_id
@@ -659,10 +670,26 @@ const buildUploaderPayload = (asset) => {
 
   return {
     id: asset.uploaded_by_user_id || null,
-    name: asset.uploader_name || null,
+    name: asset.uploader_name || asset.uploaded_by_name || null,
     email: asset.uploader_email || null,
     role: asset.uploader_role || null
   };
+};
+
+// Bestemmer internt om en fil ble lastet opp av en vanlig bruker eller admin.
+// Eldre filer uten registrert rolle regnes som lastet opp av administrator
+// (dokumentert standardverdi – historisk lastet administrator opp alle filer).
+const resolveUploadedByType = (asset) => {
+  if (asset.uploader_role === 'admin') return 'ADMIN';
+  if (asset.uploader_role === 'client') return 'USER';
+  return 'ADMIN';
+};
+
+// Finner et lesbart navn for opplasteren, med trygge standardverdier.
+const resolveUploadedByName = (asset, uploadedByType) => {
+  const stored = String(asset.uploaded_by_name || asset.uploader_name || '').trim();
+  if (stored) return stored;
+  return uploadedByType === 'ADMIN' ? 'Administrator' : 'Bruker';
 };
 
 const persistUploadedAssets = async ({ project, files, title, kind, uploader }) => {
@@ -686,8 +713,8 @@ const persistUploadedAssets = async ({ project, files, title, kind, uploader }) 
       await dbRun(
         `INSERT INTO assets
         (id, project_id, title, kind, file_name, stored_name, mime_type, size_bytes,
-         uploaded_by_user_id, uploader_role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+         uploaded_by_user_id, uploader_role, uploaded_by_name)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           assetId,
           project.id,
@@ -698,7 +725,8 @@ const persistUploadedAssets = async ({ project, files, title, kind, uploader }) 
           file.mimetype || 'application/octet-stream',
           file.size || 0,
           uploader?.id || null,
-          uploader?.role || null
+          uploader?.role || null,
+          uploader?.name || null
         ]
       );
     } catch (error) {
@@ -829,6 +857,8 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
   const assets = assetsRaw.map((asset) => {
     const uploader = buildUploaderPayload(asset);
     const isOwner = Boolean(uploader?.id && uploader.id === currentUser.id);
+    const uploadedByType = resolveUploadedByType(asset);
+    const uploadedByName = resolveUploadedByName(asset, uploadedByType);
     return {
       id: asset.id,
       title: asset.title,
@@ -840,6 +870,9 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
       fileName: asset.file_name,
       sizeBytes: asset.size_bytes,
       createdAt: asset.created_at,
+      uploadedAt: asset.created_at,
+      uploadedByType,
+      uploadedByName,
       uploader,
       canDelete: currentUser.role === 'admin' || isOwner
     };
@@ -896,16 +929,6 @@ app.get('/api/projects/:projectId/members', ensureAuthenticated, async (req, res
 
 app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, res) => {
   const projectId = req.params.projectId;
-  const requestedFolder = String(req.query.folder || 'all').trim().toLowerCase();
-  const allowedFolders = new Set([
-    'all',
-    'bilder',
-    'andre-filer'
-  ]);
-
-  if (!allowedFolders.has(requestedFolder)) {
-    return res.status(400).json({ message: 'Ugyldig mappefilter.' });
-  }
 
   const project = await dbGet('SELECT id, name FROM projects WHERE id = $1', [projectId]);
   if (!project) {
@@ -918,29 +941,45 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
   }
 
   const assetsRaw = await getProjectAssets(project.id);
-  const filteredAssets = assetsRaw.filter((asset) => {
-    if (requestedFolder === 'all') {
-      return true;
+
+  // Del filene inn etter hvem som lastet dem opp. Begge mappene skal alltid
+  // finnes i ZIP-filen, selv om de er tomme.
+  const FOLDER_LABELS = { USER: 'Brukeropplastning', ADMIN: 'Adminopplastning' };
+  const usedNamesByFolder = { USER: new Set(), ADMIN: new Set() };
+
+  // Sørger for at like filnavn ikke overskriver hverandre i samme mappe.
+  const uniqueNameInFolder = (folderType, rawFileName) => {
+    const safe = sanitizeFileName(rawFileName || 'fil');
+    const used = usedNamesByFolder[folderType];
+    if (!used.has(safe.toLowerCase())) {
+      used.add(safe.toLowerCase());
+      return safe;
     }
-    return detectAssetFolderKey(asset.file_name) === requestedFolder;
-  });
 
-  if (!filteredAssets.length) {
-    return res.status(404).json({ message: 'Ingen filer funnet for valgt nedlasting.' });
-  }
+    const dotIndex = safe.lastIndexOf('.');
+    const base = dotIndex > 0 ? safe.slice(0, dotIndex) : safe;
+    const ext = dotIndex > 0 ? safe.slice(dotIndex) : '';
+    let counter = 2;
+    let candidate = `${base} (${counter})${ext}`;
+    while (used.has(candidate.toLowerCase())) {
+      counter += 1;
+      candidate = `${base} (${counter})${ext}`;
+    }
+    used.add(candidate.toLowerCase());
+    return candidate;
+  };
 
-  const projectBase = stripExtension(sanitizeFileName(project.name || 'prosjekt'));
-  const suffix = requestedFolder === 'all' ? 'alle-filer' : requestedFolder;
-  const zipName = sanitizeFileName(`${projectBase}-${suffix}.zip`);
+  const zipBaseName = stripExtension(sanitizeFileName(project.name || 'prosjekt')) || 'prosjekt';
+  const zipName = `${zipBaseName}.zip`;
 
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
 
   const archive = new archiver.ZipArchive({ zlib: { level: 9 } });
   archive.on('error', (error) => {
-    console.error(error);
+    console.error('ZIP-generering feilet:', error);
     if (!res.headersSent) {
-      res.status(500).json({ message: 'Klarte ikke lage ZIP-fil.' });
+      res.status(500).json({ message: 'Prosjektet kunne ikke lastes ned. Prov igjen.' });
       return;
     }
     res.end();
@@ -948,14 +987,19 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
 
   archive.pipe(res);
 
-  for (const asset of filteredAssets) {
-    const folderKey = detectAssetFolderKey(asset.file_name);
-    const folderLabel = folderLabelFromKey(folderKey);
-    const safeFileName = sanitizeFileName(asset.file_name);
-    const zipPath = requestedFolder === 'all' ? `${folderLabel}/${safeFileName}` : safeFileName;
+  // Opprett begge mappene alltid – også når de er tomme.
+  archive.append(Buffer.alloc(0), { name: `${FOLDER_LABELS.USER}/` });
+  archive.append(Buffer.alloc(0), { name: `${FOLDER_LABELS.ADMIN}/` });
+
+  for (const asset of assetsRaw) {
+    const uploadedByType = resolveUploadedByType(asset);
+    const folderLabel = FOLDER_LABELS[uploadedByType] || FOLDER_LABELS.ADMIN;
+    const uniqueName = uniqueNameInFolder(uploadedByType, asset.file_name);
+    const zipPath = `${folderLabel}/${uniqueName}`;
 
     const storageResult = await readAssetFromStorage(asset.stored_name);
     if (!storageResult) {
+      // Manglende fil hoppes over, men nedlastingen fortsetter.
       continue;
     }
 
