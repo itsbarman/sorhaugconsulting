@@ -533,6 +533,216 @@ body.auth-portal {
   line-height: 1.5;
 }
 
+.resource-panel__head {
+  margin-bottom: 0.6rem;
+}
+
+.resource-summary {
+  margin: 0.15rem 0 0;
+  color: #24344f;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.resource-toolbar {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+}
+
+.resource-toolbar__btn {
+  flex: 1 1 180px;
+  min-height: 52px;
+  padding: 0.7rem 0.95rem;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 63, 151, 0.28);
+  color: #0f3f97;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  box-shadow: 0 6px 14px rgba(15, 63, 151, 0.08);
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.resource-toolbar__btn:hover,
+.resource-toolbar__btn:focus {
+  background: rgba(15, 63, 151, 0.06);
+  border-color: rgba(15, 63, 151, 0.55);
+  transform: translateY(-1px);
+}
+
+.resource-toolbar__btn.is-open {
+  background: rgba(15, 63, 151, 0.12);
+  border-color: rgba(15, 63, 151, 0.55);
+}
+
+.resource-toolbar__btn--primary {
+  background: #0f3f97;
+  color: #ffffff;
+  border-color: #0f3f97;
+  box-shadow: 0 10px 20px rgba(15, 63, 151, 0.25);
+}
+
+.resource-toolbar__btn--primary:hover,
+.resource-toolbar__btn--primary:focus {
+  background: #0d357f;
+  border-color: #0d357f;
+}
+
+.resource-toolbar__btn--primary.is-open {
+  background: #0d357f;
+  border-color: #0d357f;
+  color: #ffffff;
+}
+
+.resource-toolbar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(15, 63, 151, 0.12);
+  color: #0f3f97;
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.resource-toolbar__btn--primary .resource-toolbar__icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.resource-toolbar__icon[data-icon='upload']::before {
+  content: '\2191';
+}
+
+.resource-toolbar__icon[data-icon='download']::before {
+  content: '\2193';
+}
+
+.resource-toolbar__icon[data-icon='people']::before {
+  content: '\002A';
+}
+
+.resource-toolbar__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55rem;
+  height: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(15, 63, 151, 0.14);
+  color: #0f3f97;
+  margin-left: 0.3rem;
+}
+
+.resource-toolbar__btn--primary .resource-toolbar__count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.resource-empty {
+  margin: 0.5rem 0 1rem;
+  padding: 1.6rem 1rem;
+  border-radius: 14px;
+  border: 1px dashed rgba(15, 63, 151, 0.28);
+  background: rgba(15, 63, 151, 0.03);
+  text-align: center;
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+.resource-empty__icon {
+  width: 58px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid #0f3f97;
+  background: rgba(15, 63, 151, 0.12);
+  position: relative;
+}
+
+.resource-empty__icon::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 8px;
+  width: 24px;
+  height: 12px;
+  border: 2px solid #0f3f97;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: rgba(15, 63, 151, 0.12);
+}
+
+.resource-empty__title {
+  margin: 0;
+  color: #0b1220;
+  font-size: 1.15rem;
+}
+
+.resource-empty__text {
+  margin: 0;
+  color: #4b5563;
+  max-width: 44ch;
+}
+
+.resource-empty__cta {
+  background: #0f3f97;
+  color: #ffffff;
+  border-color: #0f3f97;
+}
+
+.resource-empty__cta:hover,
+.resource-empty__cta:focus {
+  background: #0d357f;
+  border-color: #0d357f;
+}
+
+.asset-folder-content__toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.65rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asset-folder-content__back {
+  background: transparent;
+  border-color: rgba(15, 63, 151, 0.28);
+  color: #0f3f97;
+}
+
+.asset-folder-content__back:hover,
+.asset-folder-content__back:focus {
+  background: rgba(15, 63, 151, 0.08);
+  border-color: rgba(15, 63, 151, 0.45);
+}
+
+.asset-folder-content__download {
+  background: #0f3f97;
+  color: #ffffff;
+  border-color: #0f3f97;
+}
+
+.asset-folder-content__download:hover,
+.asset-folder-content__download:focus {
+  background: #0d357f;
+  border-color: #0d357f;
+}
+
 .project-access-overview {
   margin: 0 0 0.9rem;
   padding: 0.75rem;

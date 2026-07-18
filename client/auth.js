@@ -281,9 +281,19 @@
     const assetHint = document.getElementById('assetHint');
     const projectAccessOverview = document.getElementById('projectAccessOverview');
     const projectAccessList = document.getElementById('projectAccessList');
-    const assetDownloadActions = document.getElementById('assetDownloadActions');
     const assetFilterBar = document.getElementById('assetFilterBar');
     const logoutButton = document.getElementById('logoutButton');
+
+    const resourceToolbar = document.getElementById('resourceToolbar');
+    const toolbarUploadBtn = document.getElementById('toolbarUploadBtn');
+    const toolbarDownloadAllBtn = document.getElementById('toolbarDownloadAllBtn');
+    const toolbarAccessBtn = document.getElementById('toolbarAccessBtn');
+    const toolbarAccessCount = document.getElementById('toolbarAccessCount');
+    const resourceSummary = document.getElementById('resourceSummary');
+    const resourceEmpty = document.getElementById('resourceEmpty');
+    const resourceEmptyUploadBtn = document.getElementById('resourceEmptyUploadBtn');
+    const folderBackBtn = document.getElementById('folderBackBtn');
+    const folderDownloadBtn = document.getElementById('folderDownloadBtn');
 
     const memberUploadSection = document.getElementById('memberUploadSection');
     const memberUploadForm = document.getElementById('memberUploadForm');
@@ -364,12 +374,62 @@
     };
 
     const clearDownloadActions = () => {
-      if (!assetDownloadActions) {
+      // Nedlastingsknapp er nå en del av verktoylinjen; ingen egen liste.
+    };
+
+    const setToolbarVisible = (visible) => {
+      if (resourceToolbar) resourceToolbar.hidden = !visible;
+    };
+
+    const setResourceSummary = (text) => {
+      if (!resourceSummary) return;
+      if (!text) {
+        resourceSummary.textContent = '';
+        resourceSummary.hidden = true;
         return;
       }
+      resourceSummary.textContent = text;
+      resourceSummary.hidden = false;
+    };
 
-      assetDownloadActions.innerHTML = '';
-      assetDownloadActions.hidden = true;
+    const setResourceEmptyVisible = (visible) => {
+      if (resourceEmpty) resourceEmpty.hidden = !visible;
+    };
+
+    const setUploadPanelOpen = (open) => {
+      if (!memberUploadSection) return;
+      memberUploadSection.hidden = !open;
+      if (toolbarUploadBtn) {
+        toolbarUploadBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toolbarUploadBtn.classList.toggle('is-open', open);
+        const label = toolbarUploadBtn.querySelector('.resource-toolbar__label');
+        if (label) label.textContent = open ? 'Skjul opplasting' : 'Last opp filer';
+      }
+      if (open) {
+        setResourceEmptyVisible(false);
+        memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (state.activeProjectId && (!state.currentAssets || state.currentAssets.length === 0)) {
+        setResourceEmptyVisible(true);
+      }
+    };
+
+    const setAccessPanelOpen = (open) => {
+      if (!projectAccessOverview) return;
+      projectAccessOverview.hidden = !open;
+      if (toolbarAccessBtn) {
+        toolbarAccessBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toolbarAccessBtn.classList.toggle('is-open', open);
+        const label = toolbarAccessBtn.querySelector('.resource-toolbar__label');
+        if (label) {
+          const newText = open ? 'Skjul personer ' : 'Vis personer ';
+          const firstChild = label.firstChild;
+          if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+            firstChild.textContent = newText;
+          } else {
+            label.insertBefore(document.createTextNode(newText), firstChild);
+          }
+        }
+      }
     };
 
     const clearAssetFilterBar = () => {
@@ -392,18 +452,14 @@
         return;
       }
 
-      memberUploadSection.hidden = true;
+      setUploadPanelOpen(false);
       pendingMemberUploadFiles.length = 0;
       renderMemberUploadSelection();
       setMessage(memberUploadMessage, '');
     };
 
     const showMemberUpload = () => {
-      if (!memberUploadSection) {
-        return;
-      }
-
-      memberUploadSection.hidden = false;
+      setUploadPanelOpen(true);
     };
 
     const clearProjectAccess = () => {
@@ -413,6 +469,8 @@
 
       projectAccessList.innerHTML = '';
       projectAccessOverview.hidden = true;
+      if (toolbarAccessCount) toolbarAccessCount.textContent = '0';
+      setAccessPanelOpen(false);
     };
 
     const renderProjectAccess = (members = []) => {
@@ -422,12 +480,15 @@
 
       projectAccessList.innerHTML = '';
 
+      if (toolbarAccessCount) {
+        toolbarAccessCount.textContent = String(members.length);
+      }
+
       if (!members.length) {
         const empty = document.createElement('li');
         empty.className = 'project-access-item project-access-item--empty';
         empty.textContent = 'Ingen medlemmer er tildelt dette prosjektet enda.';
         projectAccessList.appendChild(empty);
-        projectAccessOverview.hidden = false;
         return;
       }
 
@@ -448,8 +509,6 @@
         item.append(name, email, role);
         projectAccessList.appendChild(item);
       }
-
-      projectAccessOverview.hidden = false;
     };
 
     const getFileExtension = (fileName) => {
@@ -722,10 +781,19 @@
         mine: assets.filter((asset) => asset.uploader?.id && asset.uploader.id === state.user?.id).length
       };
 
-      for (const [key, value] of Object.entries(counts)) {
-        const counter = assetFilterBar.querySelector(`[data-count-for="${key}"]`);
+      let visibleTabs = 0;
+      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
+        const key = tab.dataset.filter;
+        const value = counts[key] ?? 0;
+        const counter = tab.querySelector('.asset-filter-count');
         if (counter) counter.textContent = String(value);
+        const shouldShow = key === 'all' || value > 0;
+        tab.hidden = !shouldShow;
+        if (shouldShow) visibleTabs += 1;
       }
+
+      // Skjul hele filterlinjen om kun «Alle» finnes.
+      assetFilterBar.hidden = visibleTabs <= 1;
     };
 
     const setAssetFilter = (filter) => {
@@ -740,32 +808,15 @@
       renderAssets(state.currentAssets, { preserveFilter: true });
     };
 
-    const renderDownloadActions = (projectId, orderedFolders) => {
-      if (!assetDownloadActions || !projectId) {
-        return;
-      }
+    const renderDownloadActions = () => {
+      // Nedlastingsknappen er nå en del av verktøylinjen. Beholdes som no-op av bakoverkompatibilitet.
+    };
 
-      assetDownloadActions.innerHTML = '';
-      assetDownloadActions.hidden = false;
-
-      const createDownloadButton = (label, folderKey = 'all') => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn btn-small asset-download-btn';
-        button.textContent = label;
-        button.addEventListener('click', () => {
-          const url = `/api/projects/${encodeURIComponent(projectId)}/download?folder=${encodeURIComponent(folderKey)}`;
-          window.open(url, '_blank', 'noopener');
-        });
-        return button;
-      };
-
-      assetDownloadActions.appendChild(createDownloadButton('Last ned hele prosjektet (ZIP)', 'all'));
-
-      for (const folderName of orderedFolders) {
-        const folderKey = folderKeyByName[folderName] || 'andre-filer';
-        assetDownloadActions.appendChild(createDownloadButton(`Last ned ${folderName} (ZIP)`, folderKey));
-      }
+    const closeFolderView = () => {
+      if (assetFolderContent) assetFolderContent.hidden = true;
+      if (assetFolderTitle) assetFolderTitle.textContent = '';
+      state.activeFolderName = null;
+      assetFolders?.querySelectorAll('.asset-folder-tile').forEach((item) => item.classList.remove('active'));
     };
 
     const renderAssets = (assets, options = {}) => {
@@ -775,13 +826,16 @@
       clearDownloadActions();
 
       if (!state.currentAssets.length) {
-        assetHint.textContent = 'Ingen ressurser tilgjengelig i prosjektet. Bruk opplastingsfeltet under for å legge til filer.';
+        assetHint.textContent = '';
+        setResourceSummary('');
+        setResourceEmptyVisible(true);
         if (assetFilterBar) assetFilterBar.hidden = true;
         return;
       }
 
+      setResourceEmptyVisible(false);
+
       if (assetFilterBar) {
-        assetFilterBar.hidden = false;
         updateAssetFilterCounts(state.currentAssets);
       }
 
@@ -789,10 +843,9 @@
 
       if (!filteredAssets.length) {
         assetHint.textContent = 'Ingen filer matcher valgt filter.';
+        setResourceSummary('');
         return;
       }
-
-      assetHint.textContent = 'Velg en mappe for å vise filer.';
 
       const groupedAssets = new Map();
       for (const asset of filteredAssets) {
@@ -811,7 +864,12 @@
         return aRank - bRank;
       });
 
-      renderDownloadActions(state.activeProjectId, orderedFolders);
+      const totalFiles = filteredAssets.length;
+      const totalFolders = orderedFolders.length;
+      const folderWord = totalFolders === 1 ? 'mappe' : 'mapper';
+      const fileWord = totalFiles === 1 ? 'fil' : 'filer';
+      setResourceSummary(`${totalFiles} ${fileWord} i ${totalFolders} ${folderWord}. Trykk på en mappe for å åpne den.`);
+      assetHint.textContent = '';
 
       const renderFolderItems = (folderName) => {
         clearAssets();
@@ -819,8 +877,9 @@
         if (assetFolderContent) {
           assetFolderContent.hidden = false;
         }
+        const count = (groupedAssets.get(folderName) || []).length;
         if (assetFolderTitle) {
-          assetFolderTitle.textContent = `${folderName}`;
+          assetFolderTitle.textContent = `${folderName} · ${count} ${count === 1 ? 'fil' : 'filer'}`;
         }
 
         const selectedAssets = groupedAssets.get(folderName) || [];
@@ -899,14 +958,16 @@
     };
 
     const loadAssets = async (projectId) => {
-      assetHint.textContent = 'Laster ressurser...';
+      assetHint.textContent = 'Laster filer...';
+      setResourceSummary('');
+      setResourceEmptyVisible(false);
       clearAssets();
       clearAssetFilterBar();
       state.assetFilter = 'all';
 
       const { response, payload } = await request(`/api/projects/${encodeURIComponent(projectId)}/assets`);
       if (!response.ok) {
-        assetHint.textContent = payload?.message || 'Klarte ikke hente ressurser.';
+        assetHint.textContent = payload?.message || 'Klarte ikke hente filene.';
         return;
       }
 
@@ -932,7 +993,10 @@
         empty.className = 'project-item';
         empty.textContent = 'Du har foreløpig ingen tildelte prosjekter.';
         projectList.appendChild(empty);
-        assetHint.textContent = 'Ingen prosjekter tilgjengelig.';
+        assetHint.textContent = 'Du har ingen prosjekter enda. Kontakt Sorhaug Consulting hvis du forventer tilgang.';
+        setResourceSummary('');
+        setResourceEmptyVisible(false);
+        setToolbarVisible(false);
         clearDownloadActions();
         clearAssetFilterBar();
         hideMemberUpload();
@@ -946,7 +1010,10 @@
       clearAssetFilterBar();
       clearProjectAccess();
       hideMemberUpload();
-      assetHint.textContent = 'Klikk på et prosjekt i "Dine prosjekter" for å vise ressurser.';
+      setToolbarVisible(false);
+      setResourceEmptyVisible(false);
+      setResourceSummary('');
+      assetHint.textContent = 'Trykk på et prosjekt til venstre for å se filene.';
 
       for (const project of projects) {
         const li = document.createElement('li');
@@ -964,7 +1031,11 @@
           projectList.querySelectorAll('.project-item__open').forEach((item) => item.classList.remove('active'));
           button.classList.add('active');
           hideMemberUpload();
-          showMemberUpload();
+          setAccessPanelOpen(false);
+          closeFolderView();
+          setToolbarVisible(true);
+          setResourceEmptyVisible(false);
+          assetHint.textContent = 'Laster filer...';
           await Promise.all([loadAssets(project.id), loadProjectAccess(project.id)]);
         });
 
@@ -1025,6 +1096,9 @@
         clearAssetFilterBar();
         clearProjectAccess();
         hideMemberUpload();
+        setToolbarVisible(false);
+        setResourceEmptyVisible(false);
+        setResourceSummary('');
         assetHint.textContent = 'Prosjektet er slettet. Velg et annet prosjekt.';
       }
 
@@ -1562,6 +1636,59 @@
       });
     };
 
+    const bootResourceToolbar = () => {
+      if (toolbarUploadBtn) {
+        toolbarUploadBtn.addEventListener('click', () => {
+          const isOpen = memberUploadSection && !memberUploadSection.hidden;
+          setUploadPanelOpen(!isOpen);
+        });
+      }
+
+      if (toolbarAccessBtn) {
+        toolbarAccessBtn.addEventListener('click', () => {
+          const isOpen = projectAccessOverview && !projectAccessOverview.hidden;
+          setAccessPanelOpen(!isOpen);
+        });
+      }
+
+      if (toolbarDownloadAllBtn) {
+        toolbarDownloadAllBtn.addEventListener('click', () => {
+          if (!state.activeProjectId) return;
+          const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download?folder=all`;
+          window.open(url, '_blank', 'noopener');
+        });
+      }
+
+      if (resourceEmptyUploadBtn) {
+        resourceEmptyUploadBtn.addEventListener('click', () => {
+          setUploadPanelOpen(true);
+        });
+      }
+
+      if (folderBackBtn) {
+        folderBackBtn.addEventListener('click', () => {
+          closeFolderView();
+        });
+      }
+
+      if (folderDownloadBtn) {
+        folderDownloadBtn.addEventListener('click', () => {
+          if (!state.activeProjectId || !state.activeFolderName) return;
+          const folderKey = folderKeyByName[state.activeFolderName] || 'andre-filer';
+          const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download?folder=${encodeURIComponent(folderKey)}`;
+          window.open(url, '_blank', 'noopener');
+        });
+      }
+    };
+
+    const buildGreeting = (user) => {
+      if (!user) return '';
+      const firstName = String(user.name || '').trim().split(/\s+/)[0];
+      const roleLabel = user.role === 'admin' ? 'administrator' : 'prosjektmedlem';
+      const namePart = firstName ? ` ${firstName}` : '';
+      return `Hei${namePart}! Du er logget inn som ${roleLabel}.`;
+    };
+
     const bootDashboard = async () => {
       const authenticated = await refreshSession();
       if (!authenticated) {
@@ -1569,9 +1696,10 @@
         return;
       }
 
-      userInfo.textContent = `Innlogget som ${state.user.email} (${state.user.role})`;
+      userInfo.textContent = buildGreeting(state.user);
       bootMemberUpload();
       bootAssetFilters();
+      bootResourceToolbar();
       await loadProjects();
       bootAdmin();
     };

@@ -53,25 +53,44 @@
         <ul id="projectList" class="project-list"></ul>
       </article>
 
-      <article class="panel">
-        <h2>Ressurser</h2>
-        <p id="assetHint" class="asset-panel-intro">Velg et prosjekt, og åpne deretter en mappe for å se filer.</p>
+      <article class="panel resource-panel">
+        <header class="resource-panel__head">
+          <h2>Filer</h2>
+          <p id="assetHint" class="asset-panel-intro">Velg et prosjekt til venstre for å se, laste opp eller laste ned filer.</p>
+          <p id="resourceSummary" class="resource-summary" hidden></p>
+        </header>
+
+        <div id="resourceToolbar" class="resource-toolbar" hidden>
+          <button id="toolbarUploadBtn" class="btn resource-toolbar__btn resource-toolbar__btn--primary" type="button" aria-expanded="false" aria-controls="memberUploadSection">
+            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="upload"></span>
+            <span class="resource-toolbar__label">Last opp filer</span>
+          </button>
+          <button id="toolbarDownloadAllBtn" class="btn resource-toolbar__btn" type="button">
+            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="download"></span>
+            <span class="resource-toolbar__label">Last ned alle filer</span>
+          </button>
+          <button id="toolbarAccessBtn" class="btn resource-toolbar__btn" type="button" aria-expanded="false" aria-controls="projectAccessOverview">
+            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="people"></span>
+            <span class="resource-toolbar__label">Vis personer <span id="toolbarAccessCount" class="resource-toolbar__count">0</span></span>
+          </button>
+        </div>
+
         <section id="projectAccessOverview" class="project-access-overview" hidden>
-          <h3 class="project-access-overview__title">Hvem har tilgang</h3>
+          <h3 class="project-access-overview__title">Personer med tilgang til dette prosjektet</h3>
           <ul id="projectAccessList" class="project-access-list"></ul>
         </section>
 
         <section id="memberUploadSection" class="member-upload" hidden aria-label="Last opp filer til prosjektet">
           <div class="member-upload__header">
-            <h3 class="member-upload__title">Last opp filer</h3>
-            <p class="member-upload__hint">Dra og slipp filer her eller velg dem manuelt. Maks 100 filer per opplasting, 20 MB per fil.</p>
+            <h3 class="member-upload__title">Legg til nye filer</h3>
+            <p class="member-upload__hint">Dra filer hit fra maskinen, eller trykk i feltet for å velge dem.</p>
           </div>
 
           <form id="memberUploadForm" class="member-upload__form" novalidate>
             <label id="memberUploadDropzone" class="member-upload__dropzone" for="memberUploadFilesInput">
               <span class="member-upload__dropzone-icon" aria-hidden="true"></span>
               <span class="member-upload__dropzone-title">Slipp filer her</span>
-              <span class="member-upload__dropzone-hint">eller klikk for å velge fra maskinen</span>
+              <span class="member-upload__dropzone-hint">eller trykk for å velge fra maskinen</span>
               <input
                 id="memberUploadFilesInput"
                 name="files"
@@ -110,17 +129,26 @@
           </form>
         </section>
 
-        <div id="assetDownloadActions" class="asset-download-actions" hidden></div>
+        <div id="resourceEmpty" class="resource-empty" hidden>
+          <div class="resource-empty__icon" aria-hidden="true"></div>
+          <h3 class="resource-empty__title">Ingen filer enda</h3>
+          <p class="resource-empty__text">Trykk på "Last opp filer" over for å legge til bilder, PDF eller andre dokumenter.</p>
+          <button id="resourceEmptyUploadBtn" class="btn btn-small resource-empty__cta" type="button">Last opp første fil</button>
+        </div>
 
-        <div id="assetFilterBar" class="asset-filter-bar" hidden role="tablist" aria-label="Filtrer filer etter opplaster">
-          <button type="button" class="asset-filter-tab active" data-filter="all" role="tab" aria-selected="true">Alle <span class="asset-filter-count" data-count-for="all">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="admin" role="tab" aria-selected="false">Fra admin <span class="asset-filter-count" data-count-for="admin">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="members" role="tab" aria-selected="false">Fra medlemmer <span class="asset-filter-count" data-count-for="members">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="mine" role="tab" aria-selected="false">Mine filer <span class="asset-filter-count" data-count-for="mine">0</span></button>
+        <div id="assetFilterBar" class="asset-filter-bar" hidden role="tablist" aria-label="Filtrer filer etter hvem som lastet opp">
+          <button type="button" class="asset-filter-tab active" data-filter="all" role="tab" aria-selected="true">Alle filer <span class="asset-filter-count" data-count-for="all">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="admin" role="tab" aria-selected="false">Fra Sørhaug Consulting <span class="asset-filter-count" data-count-for="admin">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="members" role="tab" aria-selected="false">Fra kunder <span class="asset-filter-count" data-count-for="members">0</span></button>
+          <button type="button" class="asset-filter-tab" data-filter="mine" role="tab" aria-selected="false">Mine egne <span class="asset-filter-count" data-count-for="mine">0</span></button>
         </div>
 
         <div id="assetFolders" class="asset-folders"></div>
         <section id="assetFolderContent" class="asset-folder-content" hidden>
+          <div class="asset-folder-content__toolbar">
+            <button id="folderBackBtn" class="btn btn-small asset-folder-content__back" type="button">← Tilbake til mapper</button>
+            <button id="folderDownloadBtn" class="btn btn-small asset-folder-content__download" type="button">Last ned denne mappen</button>
+          </div>
           <h3 id="assetFolderTitle" class="asset-folder-content__title"></h3>
           <ul id="assetList" class="asset-list"></ul>
         </section>
