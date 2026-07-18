@@ -84,7 +84,7 @@
             </button>
           </div>
 
-          <nav class="explorer-path" aria-label="Hvor du er nå">
+          <nav class="explorer-path" id="explorerPath" aria-label="Hvor du er nå">
             <button id="pathRootBtn" class="explorer-path__crumb" type="button">
               <span class="explorer-path__home-icon" aria-hidden="true"></span>
               Alle mapper
@@ -93,7 +93,7 @@
             <span id="pathCurrent" class="explorer-path__current" hidden></span>
           </nav>
 
-          <div class="explorer-window">
+          <div class="explorer-window" id="explorerWindow">
             <div id="assetFolders" class="explorer-folders"></div>
 
             <section id="assetFolderContent" class="explorer-files" hidden>
@@ -145,23 +145,6 @@
                 accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.xml,.txt,.csv,.doc,.docx,.docs,.xls,.xlsx,.ppt,.pptx,.zip,.json"
               />
             </label>
-
-            <div class="upload-sheet__meta">
-              <label class="member-upload__field">
-                <span>Hva slags fil er dette?</span>
-                <select id="memberUploadKind" name="kind">
-                  <option value="dokument" selected>Dokument</option>
-                  <option value="rapport">Rapport</option>
-                  <option value="bilde">Bilde</option>
-                  <option value="leveranse">Leveranse</option>
-                </select>
-              </label>
-
-              <label class="member-upload__field">
-                <span>Navn på filen (valgfritt)</span>
-                <input id="memberUploadTitle" name="title" type="text" maxlength="120" placeholder="F.eks. Bilder befaring uke 24" />
-              </label>
-            </div>
 
             <p id="memberUploadSummary" class="member-upload__summary" aria-live="polite">Ingen filer valgt.</p>
             <ul id="memberUploadList" class="member-upload__list" hidden></ul>

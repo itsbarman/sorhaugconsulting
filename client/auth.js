@@ -285,6 +285,8 @@
     const logoutButton = document.getElementById('logoutButton');
 
     const explorerBody = document.getElementById('explorerBody');
+    const explorerPath = document.getElementById('explorerPath');
+    const explorerWindow = document.getElementById('explorerWindow');
     const resourceToolbar = document.getElementById('resourceToolbar');
     const toolbarUploadBtn = document.getElementById('toolbarUploadBtn');
     const toolbarDownloadAllBtn = document.getElementById('toolbarDownloadAllBtn');
@@ -395,6 +397,13 @@
       if (resourceEmpty) resourceEmpty.hidden = !visible;
     };
 
+    // Viser/skjuler adresselinjen og selve filvinduet (mapper/filer/tomt).
+    // Brukes til å gi ETT fokusert steg når opplasting eller personer er åpne.
+    const setWindowChromeVisible = (visible) => {
+      if (explorerPath) explorerPath.hidden = !visible;
+      if (explorerWindow) explorerWindow.hidden = !visible;
+    };
+
     const setBreadcrumb = (folderName) => {
       if (!pathCurrent || !pathSep || !pathRootBtn) return;
       if (folderName) {
@@ -418,11 +427,13 @@
         toolbarUploadBtn.classList.toggle('is-open', open);
       }
       if (open) {
+        // Kun opplasting synlig – skjul mapper/filer/tomt slik at det er
+        // umulig å bli forvirret av flere valg samtidig.
         setAccessPanelOpen(false);
-        setResourceEmptyVisible(false);
+        setWindowChromeVisible(false);
         memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (state.activeProjectId && (!state.currentAssets || state.currentAssets.length === 0)) {
-        setResourceEmptyVisible(true);
+      } else {
+        setWindowChromeVisible(true);
       }
     };
 
@@ -434,7 +445,12 @@
         toolbarAccessBtn.classList.toggle('is-open', open);
       }
       if (open) {
+        if (memberUploadSection) memberUploadSection.hidden = true;
+        if (toolbarUploadBtn) toolbarUploadBtn.classList.remove('is-open');
+        setWindowChromeVisible(false);
         projectAccessOverview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        setWindowChromeVisible(true);
       }
     };
 
@@ -858,6 +874,7 @@
       const renderFolderItems = (folderName) => {
         clearAssets();
         state.activeFolderName = folderName;
+        setResourceEmptyVisible(false);
         if (assetFolders) assetFolders.hidden = true;
         if (assetFolderContent) assetFolderContent.hidden = false;
         setBreadcrumb(folderName);
