@@ -399,6 +399,50 @@ body.auth-portal {
   padding: 0;
 }
 
+.project-item__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.project-item__open {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.project-item__open.active {
+  background: rgba(15, 63, 151, 0.1);
+  border-radius: 8px;
+  padding: 0.35rem;
+}
+
+.project-item__open strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.project-item__delete {
+  flex: 0 0 auto;
+  width: auto;
+  border: 1px solid rgba(180, 35, 24, 0.35);
+  background: rgba(180, 35, 24, 0.08);
+  color: #b42318;
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: center;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.project-item__delete:hover,
+.project-item__delete:focus {
+  background: #b42318;
+  border-color: #b42318;
+  color: #ffffff;
+}
+
 .project-item button.active {
   background: rgba(15, 63, 151, 0.1);
   border-radius: 8px;

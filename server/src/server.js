@@ -1264,6 +1264,32 @@ app.delete('/api/admin/projects/:projectId/assets/:assetId', ensureAuthenticated
   return res.json({ ok: true, deleted: { id: asset.id, fileName: asset.file_name } });
 });
 
+app.delete('/api/admin/projects/:projectId', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  const project = await dbGet('SELECT id, name FROM projects WHERE id = $1', [req.params.projectId]);
+  if (!project) {
+    return res.status(404).json({ message: 'Prosjekt finnes ikke.' });
+  }
+
+  const assets = await dbAll('SELECT id, stored_name FROM assets WHERE project_id = $1', [project.id]);
+
+  const storageErrors = [];
+  for (const asset of assets) {
+    try {
+      await removeAssetFromStorage(asset.stored_name);
+    } catch (error) {
+      storageErrors.push({ id: asset.id, message: error?.message || 'ukjent feil' });
+    }
+  }
+
+  await dbRun('DELETE FROM projects WHERE id = $1', [project.id]);
+
+  return res.json({
+    ok: true,
+    deleted: { id: project.id, name: project.name, assetCount: assets.length },
+    storageErrors
+  });
+});
+
 app.get('/dashboard', ensureDashboardAccess, (req, res) => {
   res.sendFile(path.join(SITE_ROOT, 'dashboard.html'));
 });

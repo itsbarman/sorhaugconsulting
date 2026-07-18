@@ -952,21 +952,87 @@
         const li = document.createElement('li');
         li.className = 'project-item';
 
+        const row = document.createElement('div');
+        row.className = 'project-item__row';
+
         const button = document.createElement('button');
         button.type = 'button';
+        button.className = 'project-item__open';
         button.innerHTML = `<strong>${project.name}</strong><span>${project.description || ''}</span>`;
         button.addEventListener('click', async () => {
           state.activeProjectId = project.id;
-          projectList.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
+          projectList.querySelectorAll('.project-item__open').forEach((item) => item.classList.remove('active'));
           button.classList.add('active');
           hideMemberUpload();
           showMemberUpload();
           await Promise.all([loadAssets(project.id), loadProjectAccess(project.id)]);
         });
 
-        li.appendChild(button);
+        row.appendChild(button);
+
+        if (state.user?.role === 'admin') {
+          const deleteButton = document.createElement('button');
+          deleteButton.type = 'button';
+          deleteButton.className = 'project-item__delete';
+          deleteButton.setAttribute('aria-label', `Slett prosjektet ${project.name}`);
+          deleteButton.title = 'Slett prosjekt';
+          deleteButton.textContent = 'Slett';
+          deleteButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            deleteProject(project);
+          });
+          row.appendChild(deleteButton);
+        }
+
+        li.appendChild(row);
         projectList.appendChild(li);
       }
+    };
+
+    const deleteProject = async (project) => {
+      if (!project?.id) return;
+      if (state.user?.role !== 'admin') return;
+
+      const firstConfirm = window.confirm(
+        `Slett prosjektet "${project.name}"?\n\nAlle filer, medlemskap og opplastinger for prosjektet fjernes permanent.`
+      );
+      if (!firstConfirm) return;
+
+      const typed = window.prompt(
+        `Bekreft ved \u00e5 skrive inn prosjektnavnet n\u00f8yaktig for \u00e5 slette:\n\n${project.name}`
+      );
+      if (typed === null) return;
+      if (String(typed).trim() !== project.name) {
+        setMessage(adminMessage, 'Sletting avbrutt: prosjektnavnet stemte ikke.', true);
+        return;
+      }
+
+      const { response, payload } = await request(
+        `/api/admin/projects/${encodeURIComponent(project.id)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        setMessage(adminMessage, payload?.message || 'Klarte ikke slette prosjektet.', true);
+        return;
+      }
+
+      if (state.activeProjectId === project.id) {
+        state.activeProjectId = null;
+        clearAssets();
+        clearAssetFolders();
+        clearDownloadActions();
+        clearAssetFilterBar();
+        clearProjectAccess();
+        hideMemberUpload();
+        assetHint.textContent = 'Prosjektet er slettet. Velg et annet prosjekt.';
+      }
+
+      const assetCount = payload?.deleted?.assetCount ?? 0;
+      const suffix = assetCount ? ` (${assetCount} fil(er) fjernet)` : '';
+      setMessage(adminMessage, `Prosjekt slettet: ${project.name}${suffix}`);
+
+      await loadProjects();
     };
 
     const refreshAdminProjectSelects = () => {
