@@ -54,43 +54,88 @@
       </article>
 
       <article class="panel resource-panel">
-        <header class="resource-panel__head">
-          <h2>Filer</h2>
-          <p id="assetHint" class="asset-panel-intro">Velg et prosjekt til venstre for å se, laste opp eller laste ned filer.</p>
-          <p id="resourceSummary" class="resource-summary" hidden></p>
+        <header class="explorer-head">
+          <h2 class="explorer-title">Filer</h2>
+          <p id="assetHint" class="explorer-hint">Velg et prosjekt til venstre for å komme i gang.</p>
         </header>
 
-        <div id="resourceToolbar" class="resource-toolbar" hidden>
-          <button id="toolbarUploadBtn" class="btn resource-toolbar__btn resource-toolbar__btn--primary" type="button" aria-expanded="false" aria-controls="memberUploadSection">
-            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="upload"></span>
-            <span class="resource-toolbar__label">Last opp filer</span>
-          </button>
-          <button id="toolbarDownloadAllBtn" class="btn resource-toolbar__btn" type="button">
-            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="download"></span>
-            <span class="resource-toolbar__label">Last ned alle filer</span>
-          </button>
-          <button id="toolbarAccessBtn" class="btn resource-toolbar__btn" type="button" aria-expanded="false" aria-controls="projectAccessOverview">
-            <span class="resource-toolbar__icon" aria-hidden="true" data-icon="people"></span>
-            <span class="resource-toolbar__label">Vis personer <span id="toolbarAccessCount" class="resource-toolbar__count">0</span></span>
-          </button>
+        <div id="explorerBody" class="explorer" hidden>
+          <div id="resourceToolbar" class="explorer-actions">
+            <button id="toolbarUploadBtn" class="explorer-action explorer-action--primary" type="button" aria-expanded="false" aria-controls="memberUploadSection">
+              <span class="explorer-action__icon" aria-hidden="true" data-icon="upload"></span>
+              <span class="explorer-action__text">
+                <strong>Last opp</strong>
+                <small>Legg til filer</small>
+              </span>
+            </button>
+            <button id="toolbarDownloadAllBtn" class="explorer-action" type="button">
+              <span class="explorer-action__icon" aria-hidden="true" data-icon="download"></span>
+              <span class="explorer-action__text">
+                <strong>Last ned alt</strong>
+                <small>Hele prosjektet</small>
+              </span>
+            </button>
+            <button id="toolbarAccessBtn" class="explorer-action" type="button" aria-expanded="false" aria-controls="projectAccessOverview">
+              <span class="explorer-action__icon" aria-hidden="true" data-icon="people"></span>
+              <span class="explorer-action__text">
+                <strong>Personer</strong>
+                <small><span id="toolbarAccessCount">0</span> med tilgang</small>
+              </span>
+            </button>
+          </div>
+
+          <nav class="explorer-path" aria-label="Hvor du er nå">
+            <button id="pathRootBtn" class="explorer-path__crumb" type="button">
+              <span class="explorer-path__home-icon" aria-hidden="true"></span>
+              Alle mapper
+            </button>
+            <span id="pathSep" class="explorer-path__sep" aria-hidden="true" hidden>›</span>
+            <span id="pathCurrent" class="explorer-path__current" hidden></span>
+          </nav>
+
+          <div class="explorer-window">
+            <div id="assetFolders" class="explorer-folders"></div>
+
+            <section id="assetFolderContent" class="explorer-files" hidden>
+              <div class="explorer-files__bar">
+                <button id="folderBackBtn" class="explorer-files__back" type="button">
+                  <span aria-hidden="true">←</span> Tilbake til mapper
+                </button>
+                <button id="folderDownloadBtn" class="explorer-files__download" type="button">Last ned denne mappen</button>
+              </div>
+              <h3 id="assetFolderTitle" class="explorer-files__title"></h3>
+              <ul id="assetList" class="asset-list"></ul>
+            </section>
+
+            <div id="resourceEmpty" class="explorer-empty" hidden>
+              <div class="explorer-empty__icon" aria-hidden="true"></div>
+              <h3 class="explorer-empty__title">Det er ingen filer her ennå</h3>
+              <p class="explorer-empty__text">Trykk på den blå <strong>Last opp</strong>-knappen for å legge til bilder, PDF eller andre dokumenter.</p>
+              <button id="resourceEmptyUploadBtn" class="explorer-empty__cta" type="button">Last opp en fil nå</button>
+            </div>
+          </div>
         </div>
 
-        <section id="projectAccessOverview" class="project-access-overview" hidden>
-          <h3 class="project-access-overview__title">Personer med tilgang til dette prosjektet</h3>
+        <section id="projectAccessOverview" class="access-sheet" hidden>
+          <div class="access-sheet__head">
+            <h3 class="access-sheet__title">Personer med tilgang</h3>
+            <button id="accessCloseBtn" class="access-sheet__close" type="button" aria-label="Lukk">Lukk ✕</button>
+          </div>
           <ul id="projectAccessList" class="project-access-list"></ul>
         </section>
 
-        <section id="memberUploadSection" class="member-upload" hidden aria-label="Last opp filer til prosjektet">
-          <div class="member-upload__header">
-            <h3 class="member-upload__title">Legg til nye filer</h3>
-            <p class="member-upload__hint">Dra filer hit fra maskinen, eller trykk i feltet for å velge dem.</p>
+        <section id="memberUploadSection" class="upload-sheet" hidden aria-label="Last opp filer til prosjektet">
+          <div class="upload-sheet__head">
+            <h3 class="upload-sheet__title">Last opp filer</h3>
+            <button id="uploadCloseBtn" class="upload-sheet__close" type="button" aria-label="Lukk">Lukk ✕</button>
           </div>
+          <p class="upload-sheet__hint">Dra filer hit fra maskinen, eller trykk i det stiplede feltet for å velge dem.</p>
 
-          <form id="memberUploadForm" class="member-upload__form" novalidate>
-            <label id="memberUploadDropzone" class="member-upload__dropzone" for="memberUploadFilesInput">
-              <span class="member-upload__dropzone-icon" aria-hidden="true"></span>
-              <span class="member-upload__dropzone-title">Slipp filer her</span>
-              <span class="member-upload__dropzone-hint">eller trykk for å velge fra maskinen</span>
+          <form id="memberUploadForm" class="upload-sheet__form" novalidate>
+            <label id="memberUploadDropzone" class="upload-sheet__dropzone" for="memberUploadFilesInput">
+              <span class="upload-sheet__dropzone-icon" aria-hidden="true"></span>
+              <span class="upload-sheet__dropzone-title">Slipp filer her</span>
+              <span class="upload-sheet__dropzone-hint">eller trykk for å velge fra maskinen</span>
               <input
                 id="memberUploadFilesInput"
                 name="files"
@@ -101,9 +146,9 @@
               />
             </label>
 
-            <div class="member-upload__meta">
+            <div class="upload-sheet__meta">
               <label class="member-upload__field">
-                <span>Kategori</span>
+                <span>Hva slags fil er dette?</span>
                 <select id="memberUploadKind" name="kind">
                   <option value="dokument" selected>Dokument</option>
                   <option value="rapport">Rapport</option>
@@ -113,7 +158,7 @@
               </label>
 
               <label class="member-upload__field">
-                <span>Tittel (valgfritt)</span>
+                <span>Navn på filen (valgfritt)</span>
                 <input id="memberUploadTitle" name="title" type="text" maxlength="120" placeholder="F.eks. Bilder befaring uke 24" />
               </label>
             </div>
@@ -121,36 +166,12 @@
             <p id="memberUploadSummary" class="member-upload__summary" aria-live="polite">Ingen filer valgt.</p>
             <ul id="memberUploadList" class="member-upload__list" hidden></ul>
 
-            <div class="member-upload__actions">
-              <button id="memberUploadSubmit" class="btn btn-small" type="submit" disabled>Last opp filer</button>
-              <button id="memberUploadClear" class="btn btn-small member-upload__clear" type="button" hidden>Tøm valg</button>
+            <div class="upload-sheet__actions">
+              <button id="memberUploadSubmit" class="btn upload-sheet__submit" type="submit" disabled>Last opp filer</button>
+              <button id="memberUploadClear" class="btn member-upload__clear" type="button" hidden>Tøm valg</button>
             </div>
             <p id="memberUploadMessage" class="auth-message member-upload__message" aria-live="polite"></p>
           </form>
-        </section>
-
-        <div id="resourceEmpty" class="resource-empty" hidden>
-          <div class="resource-empty__icon" aria-hidden="true"></div>
-          <h3 class="resource-empty__title">Ingen filer enda</h3>
-          <p class="resource-empty__text">Trykk på "Last opp filer" over for å legge til bilder, PDF eller andre dokumenter.</p>
-          <button id="resourceEmptyUploadBtn" class="btn btn-small resource-empty__cta" type="button">Last opp første fil</button>
-        </div>
-
-        <div id="assetFilterBar" class="asset-filter-bar" hidden role="tablist" aria-label="Filtrer filer etter hvem som lastet opp">
-          <button type="button" class="asset-filter-tab active" data-filter="all" role="tab" aria-selected="true">Alle filer <span class="asset-filter-count" data-count-for="all">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="admin" role="tab" aria-selected="false">Fra Sørhaug Consulting <span class="asset-filter-count" data-count-for="admin">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="members" role="tab" aria-selected="false">Fra kunder <span class="asset-filter-count" data-count-for="members">0</span></button>
-          <button type="button" class="asset-filter-tab" data-filter="mine" role="tab" aria-selected="false">Mine egne <span class="asset-filter-count" data-count-for="mine">0</span></button>
-        </div>
-
-        <div id="assetFolders" class="asset-folders"></div>
-        <section id="assetFolderContent" class="asset-folder-content" hidden>
-          <div class="asset-folder-content__toolbar">
-            <button id="folderBackBtn" class="btn btn-small asset-folder-content__back" type="button">← Tilbake til mapper</button>
-            <button id="folderDownloadBtn" class="btn btn-small asset-folder-content__download" type="button">Last ned denne mappen</button>
-          </div>
-          <h3 id="assetFolderTitle" class="asset-folder-content__title"></h3>
-          <ul id="assetList" class="asset-list"></ul>
         </section>
       </article>
     </section>

@@ -284,6 +284,7 @@
     const assetFilterBar = document.getElementById('assetFilterBar');
     const logoutButton = document.getElementById('logoutButton');
 
+    const explorerBody = document.getElementById('explorerBody');
     const resourceToolbar = document.getElementById('resourceToolbar');
     const toolbarUploadBtn = document.getElementById('toolbarUploadBtn');
     const toolbarDownloadAllBtn = document.getElementById('toolbarDownloadAllBtn');
@@ -294,6 +295,11 @@
     const resourceEmptyUploadBtn = document.getElementById('resourceEmptyUploadBtn');
     const folderBackBtn = document.getElementById('folderBackBtn');
     const folderDownloadBtn = document.getElementById('folderDownloadBtn');
+    const pathRootBtn = document.getElementById('pathRootBtn');
+    const pathSep = document.getElementById('pathSep');
+    const pathCurrent = document.getElementById('pathCurrent');
+    const accessCloseBtn = document.getElementById('accessCloseBtn');
+    const uploadCloseBtn = document.getElementById('uploadCloseBtn');
 
     const memberUploadSection = document.getElementById('memberUploadSection');
     const memberUploadForm = document.getElementById('memberUploadForm');
@@ -378,22 +384,30 @@
     };
 
     const setToolbarVisible = (visible) => {
-      if (resourceToolbar) resourceToolbar.hidden = !visible;
+      if (explorerBody) explorerBody.hidden = !visible;
     };
 
-    const setResourceSummary = (text) => {
-      if (!resourceSummary) return;
-      if (!text) {
-        resourceSummary.textContent = '';
-        resourceSummary.hidden = true;
-        return;
-      }
-      resourceSummary.textContent = text;
-      resourceSummary.hidden = false;
+    const setResourceSummary = () => {
+      // Sammendrag vises nå via adresselinjen; beholdt som no-op.
     };
 
     const setResourceEmptyVisible = (visible) => {
       if (resourceEmpty) resourceEmpty.hidden = !visible;
+    };
+
+    const setBreadcrumb = (folderName) => {
+      if (!pathCurrent || !pathSep || !pathRootBtn) return;
+      if (folderName) {
+        pathSep.hidden = false;
+        pathCurrent.hidden = false;
+        pathCurrent.textContent = folderName;
+        pathRootBtn.classList.remove('is-current');
+      } else {
+        pathSep.hidden = true;
+        pathCurrent.hidden = true;
+        pathCurrent.textContent = '';
+        pathRootBtn.classList.add('is-current');
+      }
     };
 
     const setUploadPanelOpen = (open) => {
@@ -402,14 +416,10 @@
       if (toolbarUploadBtn) {
         toolbarUploadBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
         toolbarUploadBtn.classList.toggle('is-open', open);
-        const label = toolbarUploadBtn.querySelector('.resource-toolbar__label');
-        if (label) label.textContent = open ? 'Skjul opplasting' : 'Last opp filer';
       }
       if (open) {
-        setResourceEmptyVisible(false);
-        memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (state.activeProjectId && (!state.currentAssets || state.currentAssets.length === 0)) {
-        setResourceEmptyVisible(true);
+        setAccessPanelOpen(false);
+        memberUploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     };
 
@@ -419,16 +429,9 @@
       if (toolbarAccessBtn) {
         toolbarAccessBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
         toolbarAccessBtn.classList.toggle('is-open', open);
-        const label = toolbarAccessBtn.querySelector('.resource-toolbar__label');
-        if (label) {
-          const newText = open ? 'Skjul personer ' : 'Vis personer ';
-          const firstChild = label.firstChild;
-          if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
-            firstChild.textContent = newText;
-          } else {
-            label.insertBefore(document.createTextNode(newText), firstChild);
-          }
-        }
+      }
+      if (open) {
+        projectAccessOverview.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     };
 
@@ -438,13 +441,6 @@
       }
 
       assetFilterBar.hidden = true;
-      for (const tab of assetFilterBar.querySelectorAll('.asset-filter-tab')) {
-        tab.classList.toggle('active', tab.dataset.filter === 'all');
-        tab.setAttribute('aria-selected', tab.dataset.filter === 'all' ? 'true' : 'false');
-      }
-      for (const counter of assetFilterBar.querySelectorAll('.asset-filter-count')) {
-        counter.textContent = '0';
-      }
     };
 
     const hideMemberUpload = () => {
@@ -812,43 +808,47 @@
       // Nedlastingsknappen er nå en del av verktøylinjen. Beholdes som no-op av bakoverkompatibilitet.
     };
 
+    const fileIconKind = (fileName) => {
+      const name = String(fileName || '').toLowerCase();
+      const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+      if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(ext)) return 'image';
+      if (ext === '.pdf') return 'pdf';
+      if (['.doc', '.docx', '.docs', '.txt'].includes(ext)) return 'doc';
+      if (['.xls', '.xlsx', '.csv'].includes(ext)) return 'sheet';
+      if (['.ppt', '.pptx'].includes(ext)) return 'slides';
+      if (ext === '.zip') return 'zip';
+      return 'file';
+    };
+
     const closeFolderView = () => {
       if (assetFolderContent) assetFolderContent.hidden = true;
-      if (assetFolderTitle) assetFolderTitle.textContent = '';
+      if (assetList) assetList.innerHTML = '';
+      if (assetFolders) assetFolders.hidden = false;
       state.activeFolderName = null;
-      assetFolders?.querySelectorAll('.asset-folder-tile').forEach((item) => item.classList.remove('active'));
+      setBreadcrumb(null);
+      assetFolders?.querySelectorAll('.explorer-folder').forEach((item) => item.classList.remove('active'));
     };
 
     const renderAssets = (assets, options = {}) => {
       state.currentAssets = Array.isArray(assets) ? assets : [];
       clearAssets();
       clearAssetFolders();
-      clearDownloadActions();
 
+      // Ingen filer i prosjektet enda.
       if (!state.currentAssets.length) {
         assetHint.textContent = '';
-        setResourceSummary('');
+        if (assetFolders) assetFolders.hidden = true;
+        if (assetFolderContent) assetFolderContent.hidden = true;
+        setBreadcrumb(null);
         setResourceEmptyVisible(true);
-        if (assetFilterBar) assetFilterBar.hidden = true;
         return;
       }
 
       setResourceEmptyVisible(false);
-
-      if (assetFilterBar) {
-        updateAssetFilterCounts(state.currentAssets);
-      }
-
-      const filteredAssets = applyAssetFilter(state.currentAssets);
-
-      if (!filteredAssets.length) {
-        assetHint.textContent = 'Ingen filer matcher valgt filter.';
-        setResourceSummary('');
-        return;
-      }
+      if (assetFolders) assetFolders.hidden = false;
 
       const groupedAssets = new Map();
-      for (const asset of filteredAssets) {
+      for (const asset of state.currentAssets) {
         const folderName = detectAssetFolder(asset);
         if (!groupedAssets.has(folderName)) {
           groupedAssets.set(folderName, []);
@@ -864,28 +864,32 @@
         return aRank - bRank;
       });
 
-      const totalFiles = filteredAssets.length;
-      const totalFolders = orderedFolders.length;
-      const folderWord = totalFolders === 1 ? 'mappe' : 'mapper';
-      const fileWord = totalFiles === 1 ? 'fil' : 'filer';
-      setResourceSummary(`${totalFiles} ${fileWord} i ${totalFolders} ${folderWord}. Trykk på en mappe for å åpne den.`);
       assetHint.textContent = '';
 
       const renderFolderItems = (folderName) => {
         clearAssets();
         state.activeFolderName = folderName;
-        if (assetFolderContent) {
-          assetFolderContent.hidden = false;
-        }
+        if (assetFolders) assetFolders.hidden = true;
+        if (assetFolderContent) assetFolderContent.hidden = false;
+        setBreadcrumb(folderName);
+
         const count = (groupedAssets.get(folderName) || []).length;
         if (assetFolderTitle) {
-          assetFolderTitle.textContent = `${folderName} · ${count} ${count === 1 ? 'fil' : 'filer'}`;
+          assetFolderTitle.textContent = `${folderName} — ${count} ${count === 1 ? 'fil' : 'filer'}`;
         }
 
         const selectedAssets = groupedAssets.get(folderName) || [];
         for (const asset of selectedAssets) {
           const li = document.createElement('li');
           li.className = 'asset-item';
+
+          const icon = document.createElement('span');
+          icon.className = 'asset-item__icon';
+          icon.dataset.type = fileIconKind(asset.fileName);
+          icon.setAttribute('aria-hidden', 'true');
+
+          const body = document.createElement('div');
+          body.className = 'asset-item__body';
 
           const header = document.createElement('div');
           header.className = 'asset-item__header';
@@ -899,61 +903,65 @@
 
           const meta = document.createElement('p');
           meta.className = 'asset-item__meta';
-          meta.textContent = asset.fileName;
+          meta.textContent = `${asset.fileName} · ${formatBytes(asset.sizeBytes)}`;
+
+          const actions = document.createElement('div');
+          actions.className = 'asset-item__actions';
 
           const link = document.createElement('a');
           link.href = asset.url;
           link.target = '_blank';
           link.rel = 'noopener';
-          link.textContent = `Åpne fil (${formatBytes(asset.sizeBytes)})`;
-
-          const actions = document.createElement('div');
-          actions.className = 'asset-item__actions';
+          link.className = 'asset-item__open';
+          link.textContent = 'Åpne';
           actions.appendChild(link);
 
           if (asset.canDelete && state.activeProjectId) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
             deleteButton.className = 'btn btn-small asset-delete-btn';
-            deleteButton.textContent = 'Slett fil';
+            deleteButton.textContent = 'Slett';
             deleteButton.addEventListener('click', () => {
               deleteAsset(state.activeProjectId, asset);
             });
             actions.appendChild(deleteButton);
           }
 
-          li.append(header, meta, actions);
+          body.append(header, meta, actions);
+          li.append(icon, body);
           assetList.appendChild(li);
         }
       };
 
+      state.openFolderByName = renderFolderItems;
+
       let folderToOpen = null;
       for (const folderName of orderedFolders) {
+        const count = (groupedAssets.get(folderName) || []).length;
         const folderButton = document.createElement('button');
         folderButton.type = 'button';
-        folderButton.className = 'asset-folder-tile';
+        folderButton.className = 'explorer-folder';
         folderButton.innerHTML = `
-          <span class="asset-folder-icon" aria-hidden="true"></span>
-          <span class="asset-folder-name">${folderName}</span>
-          <span class="asset-folder-count">${(groupedAssets.get(folderName) || []).length} filer</span>
+          <span class="explorer-folder__icon" aria-hidden="true"></span>
+          <span class="explorer-folder__name">${folderName}</span>
+          <span class="explorer-folder__count">${count} ${count === 1 ? 'fil' : 'filer'}</span>
         `;
 
         folderButton.addEventListener('click', () => {
-          assetFolders?.querySelectorAll('.asset-folder-tile').forEach((item) => item.classList.remove('active'));
-          folderButton.classList.add('active');
           renderFolderItems(folderName);
         });
 
         assetFolders?.appendChild(folderButton);
 
         if (options.preserveFilter && state.activeFolderName === folderName) {
-          folderToOpen = folderButton;
+          folderToOpen = folderName;
         }
       }
 
       if (folderToOpen) {
-        folderToOpen.classList.add('active');
-        renderFolderItems(state.activeFolderName);
+        renderFolderItems(folderToOpen);
+      } else {
+        setBreadcrumb(null);
       }
     };
 
@@ -1625,6 +1633,7 @@
           }
 
           await loadAssets(state.activeProjectId);
+          setUploadPanelOpen(false);
         } catch {
           setMessage(memberUploadMessage, 'Nettverksfeil under opplasting.', true);
         } finally {
@@ -1677,6 +1686,24 @@
           const folderKey = folderKeyByName[state.activeFolderName] || 'andre-filer';
           const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download?folder=${encodeURIComponent(folderKey)}`;
           window.open(url, '_blank', 'noopener');
+        });
+      }
+
+      if (pathRootBtn) {
+        pathRootBtn.addEventListener('click', () => {
+          closeFolderView();
+        });
+      }
+
+      if (accessCloseBtn) {
+        accessCloseBtn.addEventListener('click', () => {
+          setAccessPanelOpen(false);
+        });
+      }
+
+      if (uploadCloseBtn) {
+        uploadCloseBtn.addEventListener('click', () => {
+          setUploadPanelOpen(false);
         });
       }
     };
