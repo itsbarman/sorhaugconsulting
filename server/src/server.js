@@ -235,7 +235,8 @@ const removeUploadedFiles = (files) => {
 
 const toStorageObjectPath = ({ projectId, assetId, fileName }) => {
   const safeName = sanitizeFileName(fileName || `${assetId}.bin`);
-  return `${projectId}/${assetId}/${safeName}`;
+  const folderKey = detectAssetFolderKey(safeName);
+  return `${projectId}/${folderKey}/${assetId}/${safeName}`;
 };
 
 const uploadAssetToStorage = async ({ objectPath, file }) => {
@@ -929,6 +930,10 @@ app.get('/api/projects/:projectId/members', ensureAuthenticated, async (req, res
 
 app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, res) => {
   const projectId = req.params.projectId;
+  const requestedFolder = String(req.query.folder || '').toLowerCase();
+  if (requestedFolder && requestedFolder !== 'bilder') {
+    return res.status(400).json({ message: 'Ugyldig nedlastingsmappe.' });
+  }
 
   const project = await dbGet('SELECT id, name FROM projects WHERE id = $1', [projectId]);
   if (!project) {
@@ -941,16 +946,16 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
   }
 
   const assetsRaw = await getProjectAssets(project.id);
-
-  // Del filene inn etter hvem som lastet dem opp. Begge mappene skal alltid
-  // finnes i ZIP-filen, selv om de er tomme.
-  const FOLDER_LABELS = { USER: 'Brukeropplastning', ADMIN: 'Adminopplastning' };
-  const usedNamesByFolder = { USER: new Set(), ADMIN: new Set() };
+  const assets = requestedFolder
+    ? assetsRaw.filter((asset) => detectAssetFolderKey(asset.file_name) === requestedFolder)
+    : assetsRaw;
+  const folderKeys = requestedFolder ? [requestedFolder] : ['bilder', 'andre-filer'];
+  const usedNamesByFolder = Object.fromEntries(folderKeys.map((folderKey) => [folderKey, new Set()]));
 
   // Sørger for at like filnavn ikke overskriver hverandre i samme mappe.
-  const uniqueNameInFolder = (folderType, rawFileName) => {
+  const uniqueNameInFolder = (folderKey, rawFileName) => {
     const safe = sanitizeFileName(rawFileName || 'fil');
-    const used = usedNamesByFolder[folderType];
+    const used = usedNamesByFolder[folderKey];
     if (!used.has(safe.toLowerCase())) {
       used.add(safe.toLowerCase());
       return safe;
@@ -970,7 +975,7 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
   };
 
   const zipBaseName = stripExtension(sanitizeFileName(project.name || 'prosjekt')) || 'prosjekt';
-  const zipName = `${zipBaseName}.zip`;
+  const zipName = requestedFolder ? `${zipBaseName}-bilder.zip` : `${zipBaseName}.zip`;
 
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
@@ -987,15 +992,15 @@ app.get('/api/projects/:projectId/download', ensureAuthenticated, async (req, re
 
   archive.pipe(res);
 
-  // Opprett begge mappene alltid – også når de er tomme.
-  archive.append(Buffer.alloc(0), { name: `${FOLDER_LABELS.USER}/` });
-  archive.append(Buffer.alloc(0), { name: `${FOLDER_LABELS.ADMIN}/` });
+  // Opprett alltid de relevante mappene, også når de er tomme.
+  for (const folderKey of folderKeys) {
+    archive.append(Buffer.alloc(0), { name: `${folderLabelFromKey(folderKey)}/` });
+  }
 
-  for (const asset of assetsRaw) {
-    const uploadedByType = resolveUploadedByType(asset);
-    const folderLabel = FOLDER_LABELS[uploadedByType] || FOLDER_LABELS.ADMIN;
-    const uniqueName = uniqueNameInFolder(uploadedByType, asset.file_name);
-    const zipPath = `${folderLabel}/${uniqueName}`;
+  for (const asset of assets) {
+    const folderKey = detectAssetFolderKey(asset.file_name);
+    const uniqueName = uniqueNameInFolder(folderKey, asset.file_name);
+    const zipPath = `${folderLabelFromKey(folderKey)}/${uniqueName}`;
 
     const storageResult = await readAssetFromStorage(asset.stored_name);
     if (!storageResult) {

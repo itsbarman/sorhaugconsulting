@@ -284,6 +284,7 @@
 
     const toolbarUploadBtn = document.getElementById('toolbarUploadBtn');
     const toolbarDownloadAllBtn = document.getElementById('toolbarDownloadAllBtn');
+    const toolbarDownloadImagesBtn = document.getElementById('toolbarDownloadImagesBtn');
     const uploadCloseBtn = document.getElementById('uploadCloseBtn');
 
     const userFilesList = document.getElementById('userFilesList');
@@ -1358,19 +1359,22 @@
         });
       }
 
-      if (toolbarDownloadAllBtn) {
-        toolbarDownloadAllBtn.addEventListener('click', async () => {
-          if (!state.activeProjectId) return;
-          if (toolbarDownloadAllBtn.dataset.busy === '1') return;
+      const setupProjectDownload = (button, folder, idleLabel, preparingLabel, successMessage, errorMessage) => {
+        if (!button) return;
 
-          const labelEl = toolbarDownloadAllBtn.querySelector('.big-action__label');
+        button.addEventListener('click', async () => {
+          if (!state.activeProjectId) return;
+          if (button.dataset.busy === '1') return;
+
+          const labelEl = button.querySelector('.big-action__label');
           const originalLabel = labelEl ? labelEl.textContent : '';
-          toolbarDownloadAllBtn.dataset.busy = '1';
-          toolbarDownloadAllBtn.disabled = true;
-          if (labelEl) labelEl.textContent = 'Gjør prosjektet klart for nedlasting …';
+          button.dataset.busy = '1';
+          button.disabled = true;
+          if (labelEl) labelEl.textContent = preparingLabel;
 
           try {
-            const url = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download`;
+            const baseUrl = `/api/projects/${encodeURIComponent(state.activeProjectId)}/download`;
+            const url = folder ? `${baseUrl}?folder=${encodeURIComponent(folder)}` : baseUrl;
             // Naviger til nedlastings-URL-en i et skjult element slik at
             // nettleseren starter nedlastingen uten å bytte side.
             const link = document.createElement('a');
@@ -1379,19 +1383,36 @@
             document.body.appendChild(link);
             link.click();
             link.remove();
-            showFeedback('Prosjektet lastes ned.', 'success');
+            showFeedback(successMessage, 'success');
           } catch {
-            showFeedback('Prosjektet kunne ikke lastes ned. Prøv igjen.', 'error');
+            showFeedback(errorMessage, 'error');
           } finally {
             // Gi nedlastingen et øyeblikk før knappen tilbakestilles.
             setTimeout(() => {
-              toolbarDownloadAllBtn.dataset.busy = '0';
-              toolbarDownloadAllBtn.disabled = false;
-              if (labelEl) labelEl.textContent = originalLabel || 'Last ned hele prosjektet';
+              button.dataset.busy = '0';
+              button.disabled = false;
+              if (labelEl) labelEl.textContent = originalLabel || idleLabel;
             }, 1500);
           }
         });
-      }
+      };
+
+      setupProjectDownload(
+        toolbarDownloadAllBtn,
+        '',
+        'Last ned hele prosjektet',
+        'Gjør prosjektet klart for nedlasting ...',
+        'Prosjektet lastes ned.',
+        'Prosjektet kunne ikke lastes ned. Prøv igjen.'
+      );
+      setupProjectDownload(
+        toolbarDownloadImagesBtn,
+        'bilder',
+        'Last ned bilder',
+        'Gjør bildene klare for nedlasting ...',
+        'Bildene lastes ned.',
+        'Bildene kunne ikke lastes ned. Prøv igjen.'
+      );
 
       if (uploadCloseBtn) {
         uploadCloseBtn.addEventListener('click', () => {
