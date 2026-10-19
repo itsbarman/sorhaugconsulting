@@ -37,9 +37,30 @@
 .ref-card.ref-featured .ref-supplement{margin-top:auto;}
 .ref-card.ref-featured .ref-media{display:flex;flex-direction:column;height:100%;}
 .ref-card.ref-featured .ref-media img{flex:1;min-height:330px;}
+.ref-card.ref-hallaren{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:24px;padding:24px;align-items:center;background:linear-gradient(135deg,#fff 0%,#f7fafc 62%,#edf5f5 100%);}
+.ref-hallaren__content{gap:0;}
+.ref-hallaren .ref-year{margin-bottom:12px;}
+.ref-hallaren h2{font-size:clamp(28px,3vw,36px);margin-bottom:10px;}
+.ref-hallaren .ref-client{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;margin:0 0 16px;padding:10px 13px;border:1px solid rgba(15,63,151,.12);border-radius:12px;background:rgba(255,255,255,.78);}
+.ref-client__label{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;}
+.ref-client strong{color:var(--text);font-size:14px;}
+.ref-hallaren .ref-hallaren__content > p:not(.ref-client){line-height:1.65;margin-bottom:12px;}
+.ref-hallaren__tags{margin-top:3px;margin-bottom:0;}
+.ref-card.ref-featured.ref-hallaren > .ref-hallaren__gallery{display:grid;gap:12px;min-width:0;}
+.ref-hallaren__photo{margin:0;overflow:hidden;border:1px solid rgba(15,23,42,.1);border-radius:14px;background:#fff;box-shadow:0 10px 24px rgba(2,6,23,.08);}
+.ref-hallaren__photo img{display:block;width:100%;height:clamp(170px,19vw,240px);object-fit:cover;object-position:center 52%;}
+.ref-hallaren__photo--drone img{object-position:58% 54%;}
+.ref-hallaren__photo figcaption{padding:9px 12px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);}
 @media (max-width:980px){
   .refs-stats{grid-template-columns:1fr;}
   .refs-grid{grid-template-columns:1fr;}
   .ref-card.ref-featured{grid-template-columns:1fr;}
   .ref-card.ref-featured .ref-media img{min-height:240px;}
+  .ref-card.ref-hallaren{gap:18px;padding:18px;}
+  .ref-hallaren__gallery{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  .ref-hallaren__photo img{height:clamp(150px,28vw,220px);}
+}
+@media (max-width:560px){
+  .ref-hallaren__gallery{grid-template-columns:1fr;}
+  .ref-hallaren__photo img{height:220px;}
 }
