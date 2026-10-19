@@ -290,9 +290,17 @@
     const userFilesList = document.getElementById('userFilesList');
     const userFilesCount = document.getElementById('userFilesCount');
     const userFilesEmpty = document.getElementById('userFilesEmpty');
+    const userImagesGallery = document.getElementById('userImagesGallery');
+    const userImagesCount = document.getElementById('userImagesCount');
+    const userImagesEmpty = document.getElementById('userImagesEmpty');
+    const userDocumentsCount = document.getElementById('userDocumentsCount');
     const adminFilesList = document.getElementById('adminFilesList');
     const adminFilesCount = document.getElementById('adminFilesCount');
     const adminFilesEmpty = document.getElementById('adminFilesEmpty');
+    const adminImagesGallery = document.getElementById('adminImagesGallery');
+    const adminImagesCount = document.getElementById('adminImagesCount');
+    const adminImagesEmpty = document.getElementById('adminImagesEmpty');
+    const adminDocumentsCount = document.getElementById('adminDocumentsCount');
 
     const deleteModal = document.getElementById('deleteModal');
     const deleteModalText = document.getElementById('deleteModalText');
@@ -625,7 +633,40 @@
       await loadAssets(projectId);
     };
 
-    // ---- Filkort ----
+    const addAssetActions = (asset, actions, { compact = false } = {}) => {
+      const iconType = fileIconKind(asset.fileName);
+      if (iconType === 'image' || iconType === 'pdf') {
+        const openLink = document.createElement('a');
+        openLink.className = 'file-btn file-btn--open';
+        openLink.href = asset.url;
+        openLink.target = '_blank';
+        openLink.rel = 'noopener';
+        openLink.setAttribute('aria-label', `Åpne ${asset.fileName || asset.title || 'fil'}`);
+        openLink.textContent = compact ? 'Åpne' : '◉ Åpne';
+        actions.appendChild(openLink);
+      }
+
+      const downloadLink = document.createElement('a');
+      downloadLink.className = 'file-btn file-btn--download';
+      downloadLink.href = `${asset.url}&download=1`;
+      downloadLink.setAttribute('aria-label', `Last ned ${asset.fileName || asset.title || 'fil'}`);
+      downloadLink.textContent = compact ? 'Last ned' : '↓ Last ned';
+      actions.appendChild(downloadLink);
+
+      if (asset.canDelete && state.activeProjectId) {
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'file-btn file-btn--delete';
+        deleteButton.setAttribute('aria-label', `Slett ${asset.fileName || asset.title || 'fil'}`);
+        deleteButton.textContent = compact ? 'Slett' : '× Slett';
+        deleteButton.addEventListener('click', () => {
+          openDeleteModal(state.activeProjectId, asset);
+        });
+        actions.appendChild(deleteButton);
+      }
+    };
+
+    // ---- Dokumentkort ----
     const buildFileCard = (asset) => {
       const li = document.createElement('li');
       li.className = 'file-card';
@@ -655,39 +696,52 @@
       const actions = document.createElement('div');
       actions.className = 'file-card__actions';
 
-      const iconType = fileIconKind(asset.fileName);
-      const isViewable = iconType === 'image' || iconType === 'pdf';
-
-      if (isViewable) {
-        const openLink = document.createElement('a');
-        openLink.className = 'file-btn file-btn--open';
-        openLink.href = asset.url;
-        openLink.target = '_blank';
-        openLink.rel = 'noopener';
-        openLink.innerHTML = '<span aria-hidden="true">👁</span> Åpne';
-        actions.appendChild(openLink);
-      }
-
-      const downloadLink = document.createElement('a');
-      downloadLink.className = 'file-btn file-btn--download';
-      downloadLink.href = `${asset.url}&download=1`;
-      downloadLink.innerHTML = '<span aria-hidden="true">⬇</span> Last ned';
-      actions.appendChild(downloadLink);
-
-      if (asset.canDelete && state.activeProjectId) {
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.className = 'file-btn file-btn--delete';
-        deleteButton.innerHTML = '<span aria-hidden="true">🗑</span> Slett';
-        deleteButton.addEventListener('click', () => {
-          openDeleteModal(state.activeProjectId, asset);
-        });
-        actions.appendChild(deleteButton);
-      }
+      addAssetActions(asset, actions);
 
       body.append(name, meta, size, actions);
       li.append(icon, body);
       return li;
+    };
+
+    const buildImageCard = (asset) => {
+      const item = document.createElement('li');
+      item.className = 'image-card';
+
+      const preview = document.createElement('a');
+      preview.className = 'image-card__preview';
+      preview.href = asset.url;
+      preview.target = '_blank';
+      preview.rel = 'noopener';
+      preview.setAttribute('aria-label', `Åpne bildet ${asset.fileName || asset.title || 'opplastet bilde'}`);
+
+      const image = document.createElement('img');
+      image.src = asset.url;
+      image.alt = asset.fileName || asset.title || 'Opplastet prosjektbilde';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.addEventListener('error', () => {
+        image.hidden = true;
+        preview.classList.add('image-card__preview--unavailable');
+        preview.setAttribute('aria-label', `Forhåndsvisning utilgjengelig for ${asset.fileName || 'bildet'}`);
+      }, { once: true });
+      preview.appendChild(image);
+
+      const details = document.createElement('div');
+      details.className = 'image-card__details';
+      const name = document.createElement('p');
+      name.className = 'image-card__name';
+      name.textContent = asset.fileName || asset.title || 'Bilde';
+      const meta = document.createElement('p');
+      meta.className = 'image-card__meta';
+      const date = formatUploadedDate(asset.uploadedAt || asset.createdAt);
+      meta.textContent = [date, formatBytes(asset.sizeBytes)].filter(Boolean).join(' · ');
+
+      const actions = document.createElement('div');
+      actions.className = 'image-card__actions';
+      addAssetActions(asset, actions, { compact: true });
+      details.append(name, meta, actions);
+      item.append(preview, details);
+      return item;
     };
 
     const renderFileSection = (listEl, countEl, emptyEl, files) => {
@@ -708,12 +762,63 @@
       }
     };
 
+    const renderImageSection = (galleryEl, countEl, emptyEl, images) => {
+      if (!galleryEl) return;
+      galleryEl.innerHTML = '';
+      if (countEl) countEl.textContent = `(${images.length})`;
+
+      if (!images.length) {
+        galleryEl.hidden = true;
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+      }
+
+      galleryEl.hidden = false;
+      if (emptyEl) emptyEl.hidden = true;
+      for (const asset of images) {
+        galleryEl.appendChild(buildImageCard(asset));
+      }
+    };
+
+    const renderAssetGroup = ({ files, gallery, imageCount, imageEmpty, documentCount, documentList, documentEmpty, totalCount }) => {
+      const images = [];
+      const documents = [];
+      for (const asset of files) {
+        if (asset.isImage || fileIconKind(asset.fileName) === 'image') {
+          images.push(asset);
+        } else {
+          documents.push(asset);
+        }
+      }
+      if (totalCount) totalCount.textContent = `(${files.length})`;
+      renderImageSection(gallery, imageCount, imageEmpty, images);
+      renderFileSection(documentList, documentCount, documentEmpty, documents);
+    };
+
     const renderFiles = (assets) => {
       state.currentAssets = Array.isArray(assets) ? assets : [];
       const userFiles = state.currentAssets.filter((asset) => asset.uploadedByType === 'USER');
       const adminFiles = state.currentAssets.filter((asset) => asset.uploadedByType === 'ADMIN');
-      renderFileSection(userFilesList, userFilesCount, userFilesEmpty, userFiles);
-      renderFileSection(adminFilesList, adminFilesCount, adminFilesEmpty, adminFiles);
+      renderAssetGroup({
+        files: userFiles,
+        gallery: userImagesGallery,
+        imageCount: userImagesCount,
+        imageEmpty: userImagesEmpty,
+        documentCount: userDocumentsCount,
+        documentList: userFilesList,
+        documentEmpty: userFilesEmpty,
+        totalCount: userFilesCount
+      });
+      renderAssetGroup({
+        files: adminFiles,
+        gallery: adminImagesGallery,
+        imageCount: adminImagesCount,
+        imageEmpty: adminImagesEmpty,
+        documentCount: adminDocumentsCount,
+        documentList: adminFilesList,
+        documentEmpty: adminFilesEmpty,
+        totalCount: adminFilesCount
+      });
     };
 
     const loadAssets = async (projectId) => {

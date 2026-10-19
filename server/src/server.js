@@ -869,6 +869,7 @@ app.get('/api/projects/:projectId/assets', ensureAuthenticated, async (req, res)
         userEmail: currentUser.email
       })}`,
       fileName: asset.file_name,
+      isImage: String(asset.mime_type || '').toLowerCase().startsWith('image/'),
       sizeBytes: asset.size_bytes,
       createdAt: asset.created_at,
       uploadedAt: asset.created_at,

@@ -117,16 +117,32 @@
             <h3 id="userFilesHeading" class="file-section__title">
               Dine opplastede filer <span id="userFilesCount" class="file-section__count">(0)</span>
             </h3>
-            <ul id="userFilesList" class="file-cards"></ul>
-            <p id="userFilesEmpty" class="file-section__empty" hidden>Ingen filer er lastet opp her ennå.</p>
+            <div class="asset-subsection" aria-labelledby="userImagesHeading">
+              <h4 id="userImagesHeading" class="asset-subsection__title">Bilder <span id="userImagesCount" class="file-section__count">(0)</span></h4>
+              <ul id="userImagesGallery" class="image-gallery"></ul>
+              <p id="userImagesEmpty" class="file-section__empty" hidden>Ingen bilder er lastet opp ennå.</p>
+            </div>
+            <div class="asset-subsection asset-subsection--documents" aria-labelledby="userDocumentsHeading">
+              <h4 id="userDocumentsHeading" class="asset-subsection__title">Dokumenter <span id="userDocumentsCount" class="file-section__count">(0)</span></h4>
+              <ul id="userFilesList" class="file-cards"></ul>
+              <p id="userFilesEmpty" class="file-section__empty" hidden>Ingen dokumenter er lastet opp ennå.</p>
+            </div>
           </section>
 
           <section class="file-section" aria-labelledby="adminFilesHeading">
             <h3 id="adminFilesHeading" class="file-section__title">
               Filer fra administrator <span id="adminFilesCount" class="file-section__count">(0)</span>
             </h3>
-            <ul id="adminFilesList" class="file-cards"></ul>
-            <p id="adminFilesEmpty" class="file-section__empty" hidden>Ingen filer er lastet opp her ennå.</p>
+            <div class="asset-subsection" aria-labelledby="adminImagesHeading">
+              <h4 id="adminImagesHeading" class="asset-subsection__title">Bilder <span id="adminImagesCount" class="file-section__count">(0)</span></h4>
+              <ul id="adminImagesGallery" class="image-gallery"></ul>
+              <p id="adminImagesEmpty" class="file-section__empty" hidden>Ingen bilder er lastet opp ennå.</p>
+            </div>
+            <div class="asset-subsection asset-subsection--documents" aria-labelledby="adminDocumentsHeading">
+              <h4 id="adminDocumentsHeading" class="asset-subsection__title">Dokumenter <span id="adminDocumentsCount" class="file-section__count">(0)</span></h4>
+              <ul id="adminFilesList" class="file-cards"></ul>
+              <p id="adminFilesEmpty" class="file-section__empty" hidden>Ingen dokumenter er lastet opp ennå.</p>
+            </div>
           </section>
         </div>
       </article>
