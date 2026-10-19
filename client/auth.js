@@ -193,7 +193,7 @@
 
     refreshSession().then((authenticated) => {
       if (authenticated) {
-        window.location.href = '/dashboard.html';
+        window.location.href = '/dashboard';
       }
     });
 
@@ -220,7 +220,7 @@
         state.csrfToken = payload?.csrfToken || null;
 
         setMessage(message, 'Innlogging vellykket. Sender deg til dashboard...');
-        window.location.href = '/dashboard.html';
+        window.location.href = '/dashboard';
       } catch {
         setMessage(message, 'Nettverksfeil. Prøv igjen.', true);
         triggerErrorFeedback();
@@ -258,7 +258,7 @@
         }
 
         setTimeout(() => {
-          window.location.href = '/dashboard.html';
+          window.location.href = '/dashboard';
         }, 650);
       } catch {
         setMessage(registerMessage, 'Nettverksfeil. Prøv igjen.', true);
@@ -1543,7 +1543,7 @@
     const bootDashboard = async () => {
       const authenticated = await refreshSession();
       if (!authenticated) {
-        window.location.href = '/innlogging.html';
+        window.location.href = '/innlogging';
         return;
       }
 
@@ -1561,7 +1561,7 @@
     });
 
     bootDashboard().catch(() => {
-      window.location.href = '/innlogging.html';
+      window.location.href = '/innlogging';
     });
   }
 })();

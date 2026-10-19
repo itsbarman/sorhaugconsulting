@@ -1328,6 +1328,12 @@ app.delete('/api/admin/projects/:projectId', ensureAuthenticated, ensureAdmin, a
   });
 });
 
+app.get(/^\/(.+)\.html$/i, (req, res) => {
+  const requestedPage = req.params[0];
+  const cleanPath = requestedPage.toLowerCase() === 'index' ? '/' : `/${requestedPage}`;
+  return res.redirect(301, `${cleanPath}${req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : ''}`);
+});
+
 app.get('/dashboard', ensureDashboardAccess, (req, res) => {
   res.sendFile(path.join(SITE_ROOT, 'dashboard.html'));
 });

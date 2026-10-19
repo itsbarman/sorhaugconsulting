@@ -51,7 +51,7 @@
       const dashboardLink = document.createElement('a');
       dashboardLink.id = 'navDashboardLink';
       dashboardLink.className = 'nav-dashboard-btn';
-      dashboardLink.href = 'dashboard.html';
+      dashboardLink.href = '/dashboard';
       dashboardLink.textContent = 'Dashboard';
       dashboardLink.addEventListener('click', closeMobileNav);
 
@@ -61,7 +61,7 @@
     const setLoggedOutState = () => {
       removeDashboardLink();
       navAuthLink.textContent = 'Logg inn';
-      navAuthLink.setAttribute('href', 'innlogging.html');
+      navAuthLink.setAttribute('href', '/innlogging');
       navAuthLink.onclick = null;
     };
 
