@@ -37,7 +37,7 @@
 .ref-card.ref-featured .ref-supplement{margin-top:auto;}
 .ref-card.ref-featured .ref-media{display:flex;flex-direction:column;height:100%;}
 .ref-card.ref-featured .ref-media img{flex:1;min-height:330px;}
-.ref-card.ref-hallaren{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:24px;padding:24px;align-items:center;background:linear-gradient(135deg,#fff 0%,#f7fafc 62%,#edf5f5 100%);}
+.ref-card.ref-hallaren{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:24px;padding:24px;align-items:start;background:linear-gradient(135deg,#fff 0%,#f7fafc 62%,#edf5f5 100%);}
 .ref-hallaren__content{gap:0;}
 .ref-hallaren .ref-year{margin-bottom:12px;}
 .ref-hallaren h2{font-size:clamp(28px,3vw,36px);margin-bottom:10px;}
